@@ -2,89 +2,150 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Student;
 use App\Models\Attendance;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Http\Request;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Http;
+use App\Models\Shift;
+use Illuminate\Support\Facades\Log;
 
+   use Illuminate\Validation\ValidationException;
 class AttendanceController extends Controller
 {
-public function markAttendance(Request $request)
+    public function monthlyReport(Request $request)
 {
-    try {
-        $validatedData = $request->validate([
-            'id' => 'required|integer',
-            'attended_at' => 'required|date',
-        ]);
+    $shiftId = $request->input('shift_id');
+    $month = $request->input('month', now()->format('Y-m')); // الشكل: 2025-06
 
-        $studentExists = \App\Models\Student::where('id', $validatedData['id'])->exists();
-        if (!$studentExists) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'الطالب غير موجود في النظام',
-            ], 404);
+    $shifts = Shift::all();
+    $students = collect();
+    $dates = [];
+
+    if ($shiftId) {
+        $students = Student::with(['attendances' => function($q) use ($month) {
+            $q->where('date', 'like', $month . '%');
+        }])->where('shift_id', $shiftId)->get();
+
+        // إنشاء قائمة أيام الشهر
+        $start = Carbon::parse($month . '-01');
+        $end = $start->copy()->endOfMonth();
+        while ($start <= $end) {
+            $dates[] = $start->copy();
+            $start->addDay();
+        }
+    }
+
+    return view('attendance.monthly_report', compact('shifts', 'students', 'dates', 'shiftId', 'month'));
+}
+    public function byShift(Request $request)
+    {
+        $shifts = Shift::all();
+        $students = null;
+
+        if ($request->shift_id && $request->date) {
+            $students = Student::with(['attendances' => function ($q) use ($request) {
+                $q->where('date', $request->date);
+            }])->where('shift_id', $request->shift_id)->get();
         }
 
-    } catch (ValidationException $e) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'البيانات المرسلة غير صحيحة',
-            'errors' => $e->errors(),
-        ], 422);
+        return view('attendance.by_shift', compact('shifts', 'students'));
     }
 
-    $studentId = $validatedData['id'];
-    $attendedAt = \Carbon\Carbon::parse($validatedData['attended_at']);
 
-    $alreadyMarked = Attendance::where('student_id', $studentId)
-        ->whereDate('attended_at', $attendedAt->toDateString())
-        ->exists();
-
-    if ($alreadyMarked) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'تم تسجيل الحضور مسبقاً لهذا اليوم',
-        ], 200);
-    }
-
-    Attendance::create([
-        'student_id' => $studentId,
-        'attended_at' => $attendedAt,
-    ]);
-
-    return response()->json([
-        'status' => 'success',
-        'message' => 'تم تسجيل الحضور الساعة ' . $attendedAt->format('H:i'),
-    ]);
-}
-public function getAttendanceDates($studentId)
+public function checkIn(Request $request)
 {
-  
-    $student = Student::find($studentId);
-    if (!$student) {
+    try {
+        // التحقق من صحة البيانات مع قواعد التحقق
+        $request->validate([
+            'student_id' => 'required|exists:students,id',
+            'date' => 'nullable|date',
+        ]);
+        
+        $student = Student::with('shift')->findOrFail($request->student_id);
+
+        $today = $request->date ? Carbon::parse($request->date) : Carbon::now();
+        $dayIndex = $today->dayOfWeek;
+        $shift = $student->shift;
+
+        if (!in_array($dayIndex, $shift->days)) {
+            return response()->json(['message' => 'اليوم ليس من أيام دوام الطالب.'], 400);
+        }
+
+        $alreadyChecked = Attendance::where('student_id', $student->id)
+            ->where('date', $today->toDateString())
+            ->exists();
+
+        if ($alreadyChecked) {
+            return response()->json(['message' => 'تم تسجيل الحضور مسبقاً.'], 400);
+        }
+
+        $attendance = Attendance::create([
+            'student_id' => $student->id,
+            'date' => $today->toDateString(),
+            'check_in_time' => $today->format('H:i:s'),
+        ]);
+
+        try {
+            $this->sendWhatsAppMessage($student->guardian_phone, $student->name, $today);
+        } catch (\Exception $e) {
+            Log::error("Failed to send WhatsApp message: " . $e->getMessage());
+        }
+
         return response()->json([
-            'status' => 'error',
-            'message' => 'الطالب غير موجود',
-        ], 404);
+            'message' => 'تم تسجيل الحضور بنجاح.',
+            'attendance' => $attendance,
+            'date' => $today->toDateString(),
+            'time' => $today->format('H:i:s'),
+        ]);
+
+    } catch (ValidationException $ve) {
+        // نرجع رسالة الخطأ الأولى فقط من التحقق
+        $errors = $ve->validator->errors()->all();
+        return response()->json(['message' => $errors[0] ?? 'خطأ في البيانات المدخلة.'], 422);
+    } catch (\Exception $e) {
+        Log::error("Error in checkIn: " . $e->getMessage());
+        return response()->json(['message' => 'حدث خطأ غير متوقع، يرجى المحاولة لاحقاً.'], 500);
     }
-
-   
-    $dates = Attendance::where('student_id', $studentId)
-        ->orderBy('attended_at', 'desc')
-        ->pluck('attended_at')
-        ->map(function ($date) {
-            if (!$date instanceof \Illuminate\Support\Carbon) {
-                $date = \Illuminate\Support\Carbon::parse($date);
-            }
-            return $date->format('Y-m-d H:i:s');  
-        });
-
-    return response()->json([
-        'status' => 'success',
-        'dates' => $dates,
-        'count' => $dates->count(),
-    ]);
 }
 
 
+   private function sendWhatsAppMessage($phone, $studentName, $time)
+{
+    $instanceId = "instance123113";
+    $token = "num5sceyvg5215a3";
+
+    $phone = ltrim($phone, '+');
+
+    $message = "السلام عليكم ورحمة الله وبركاته\n";
+    $message .= "تم تسجيل دخول الطالب: $studentName\n";
+    $message .= "في الساعة " . $time->format('H:i') . "\n\n";
+    $message .= "إدارة مسجد الشيخ عبد الغني الغنيمي";
+
+    $response = Http::asForm()->post("https://api.ultramsg.com/{$instanceId}/messages/chat", [
+        'token' => $token,
+        'to' => $phone,
+        'body' => $message,
+    ]);
+
+    logger("WhatsApp message sent to {$phone}, response: " . $response->body());
+}
+
+
+
+
+    // عرض حضور طلاب فترة محددة
+    public function index(Request $request)
+    {
+        $request->validate([
+            'from' => 'required|date',
+            'to' => 'required|date|after_or_equal:from',
+        ]);
+
+        $attendances = Attendance::with('student')
+            ->whereBetween('date', [$request->from, $request->to])
+            ->get();
+
+        return response()->json($attendances);
+    }
 }

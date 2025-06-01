@@ -1,24 +1,25 @@
-
 <?php
 
-use App\Http\Controllers\AttendanceController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\ShiftController;
+use App\Http\Controllers\AttendanceController;
 
-Route::middleware('api')->group(function () {
+// الطلاب
+Route::get('/students', [StudentController::class, 'index']);
+Route::post('/students', [StudentController::class, 'store']);
+Route::put('/students/{id}', [StudentController::class, 'update']);
+Route::delete('/students/{id}', [StudentController::class, 'destroy']);
+Route::post('/students/{id}/points', [StudentController::class, 'updatePointsAPI'])->name('students.updatePoints');
 
-    Route::post('/addStudent', [StudentController::class, 'store']);
-    Route::get('/students', [StudentController::class, 'index']);
-    Route::get('/students/{id}', [StudentController::class, 'show']);
-    Route::delete('/deleteStudent/{id}', [StudentController::class, 'destroy']);
 
-});
+// الفترات
+Route::get('/shifts', [ShiftController::class, 'index']);
+Route::post('/shifts', [ShiftController::class, 'store']);
+Route::put('/shifts/{id}', [ShiftController::class, 'update']);
+Route::delete('/shifts/{id}', [ShiftController::class, 'destroy']);
 
-Route::post('/attendance', [AttendanceController::class, 'markAttendance']);
-Route::get('/attendance/{id}', [AttendanceController::class, 'getAttendanceDates']);
-
-Route::get('/test', function () {
-    return response()->json([
-        'message' => 'API شغال تمام'
-    ]);
-});
+// الحضور
+Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn']);
+Route::get('/attendance', [AttendanceController::class, 'index']);
