@@ -16,15 +16,17 @@
         <div class="container">
             <a class="navbar-brand" href="#">لوحة الإدارة</a>
             <div>
+                <a href="{{ route('dashboard') }}" class="btn btn-outline-light me-2">الرئيسية</a>
                 <a href="{{ route('students.index') }}" class="btn btn-outline-light me-2">الطلاب</a>
                 <a href="{{ route('points.index') }}" class="btn btn-outline-light me-2">النقاط</a>
                 <a href="{{ route('shifts.index') }}" class="btn btn-outline-light me-2">الفترات</a>
                 <a href="{{ route('attendance.byShift') }}" class="btn btn-outline-light">دوام حسب الفترة</a>
                 <a href="{{ route('attendance.monthlyReport') }}" class="btn btn-outline-light me-2">تقرير شهري</a>
                 <form action="{{ route('logout') }}" method="POST" class="d-inline">
-    @csrf
-    <button class="btn btn-outline-light">تسجيل الخروج</button>
-</form>
+                    @csrf
+                    <button class="btn btn-outline-danger">تسجيل الخروج</button>
+                </form>
+
 
             </div>
         </div>

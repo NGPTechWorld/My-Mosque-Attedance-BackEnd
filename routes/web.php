@@ -5,6 +5,8 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
+
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
@@ -12,7 +14,8 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 
 Route::middleware('auth')->group(function () {
-Route::get('/', [StudentController::class, 'showDashboard'])->name('students.index');
+Route::get('/', [DashboardController::class, 'index'])->middleware('auth')->name('dashboard');
+Route::get('/students', [StudentController::class, 'showDashboard'])->name('students.index');
 Route::post('/students/{id}/checkin', [StudentController::class, 'checkInWeb'])->name('students.checkin');
 
 Route::get('/points', [StudentController::class, 'showPoints'])->name('points.index');
