@@ -21,6 +21,10 @@
                 <a href="{{ route('shifts.index') }}" class="btn btn-outline-light me-2">الفترات</a>
                 <a href="{{ route('attendance.byShift') }}" class="btn btn-outline-light">دوام حسب الفترة</a>
                 <a href="{{ route('attendance.monthlyReport') }}" class="btn btn-outline-light me-2">تقرير شهري</a>
+                <form action="{{ route('logout') }}" method="POST" class="d-inline">
+    @csrf
+    <button class="btn btn-outline-light">تسجيل الخروج</button>
+</form>
 
             </div>
         </div>

@@ -4,7 +4,14 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\AuthController;
 
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+
+Route::middleware('auth')->group(function () {
 Route::get('/', [StudentController::class, 'showDashboard'])->name('students.index');
 Route::post('/students/{id}/checkin', [StudentController::class, 'checkInWeb'])->name('students.checkin');
 
@@ -20,3 +27,6 @@ Route::delete('/shifts/{id}', [ShiftController::class, 'destroy'])->name('shifts
 Route::get('/attendance/by-shift', [AttendanceController::class, 'byShift'])->name('attendance.byShift');
 Route::post('/students', [StudentController::class, 'store'])->name('students.store');
 Route::get('/attendance/monthly-report', [AttendanceController::class, 'monthlyReport'])->name('attendance.monthlyReport');
+});
+
+
