@@ -3,6 +3,7 @@
 @section('content')
     <h2>تقرير الدوام الشهري</h2>
     <br>
+    <button id="exportBtn" class="btn btn-success mb-3">تصدير Excel بالعربي</button>
     <form method="GET" class="row g-2 mb-3">
         <div class="col-md-4">
             <select name="shift_id" class="form-control">
@@ -82,4 +83,73 @@
         monthInput.addEventListener('input', updateMonthDisplay);
         updateMonthDisplay(); // عرض القيمة عند التحميل
     </script>
+
+
+
+<script>
+  // دالة لتحويل الأرقام العربية
+  function toArabicNumbers(str) {
+    const arabicNums = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+    return str.replace(/\d/g, d => arabicNums[d]);
+  }
+
+  function exportTableToCSV(filename) {
+  const rows = [];
+  const table = document.querySelector('table');
+  if (!table) {
+    alert('لم يتم العثور على الجدول!');
+    return;
+  }
+
+  const trs = table.querySelectorAll('tr');
+
+  trs.forEach(tr => {
+    const cols = tr.querySelectorAll('th, td');
+    const row = [];
+
+    cols.forEach((col, index) => {
+      let text = col.innerText.trim();
+
+      if (tr.querySelectorAll('th').length > 0 && col.tagName === 'TH' && index > 0) {
+        text = toArabicNumbers(text);
+      }
+
+      if (text === '✅') text = 'حاضر';
+      if (text === '❌') text = 'غائب';
+
+      // لف النص بين علامات اقتباس لمنع مشاكل الفواصل في النص
+      text = `"${text.replace(/"/g, '""')}"`;
+
+      row.push(text);
+    });
+
+    rows.push(row.join(','));
+  });
+
+  const csvString = rows.join('\n');
+
+  const BOM = "\uFEFF"; // إضافة BOM
+
+  const blob = new Blob([BOM + csvString], {type: 'text/csv;charset=utf-8;'});
+
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.style.display = 'none';
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    // اسم الملف مع الشهر الحالي أو يمكنك تعديله ليأخذ من قيمة input الشهر
+    let monthValue = document.getElementById('monthInput').value || '';
+    if (!monthValue) monthValue = new Date().toISOString().slice(0,7);
+    const arabicMonth = toArabicNumbers(monthValue);
+
+    exportTableToCSV(`تقرير_الدوام_${arabicMonth}.csv`);
+  });
+</script>
 @endsection
