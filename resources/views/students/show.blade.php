@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('content')
 <h2>دوام الطالب: {{ $student->name }}</h2>
-
+<br>
 <table class="table table-bordered">
     <thead>
         <tr><th>التاريخ</th><th>ساعة الحضور</th></tr>

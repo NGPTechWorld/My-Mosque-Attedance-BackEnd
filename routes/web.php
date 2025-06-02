@@ -17,11 +17,15 @@ Route::middleware('auth')->group(function () {
 Route::get('/', [DashboardController::class, 'index'])->middleware('auth')->name('dashboard');
 Route::get('/students', [StudentController::class, 'showDashboard'])->name('students.index');
 Route::post('/students/{id}/checkin', [StudentController::class, 'checkInWeb'])->name('students.checkin');
+Route::delete('/students/{student}', [StudentController::class, 'destroy'])->name('students.destroy');
 
 Route::get('/points', [StudentController::class, 'showPoints'])->name('points.index');
 Route::patch('/students/{id}/points', [StudentController::class, 'updatePoints'])->name('students.updatePoints');
 Route::get('/students/create', [StudentController::class, 'create'])->name('students.create');
 Route::get('/students/{id}', [StudentController::class, 'show'])->name('students.show');
+Route::get('/students/search', [StudentController::class, 'search']);
+Route::get('students/{student}/edit', [StudentController::class, 'edit'])->name('students.edit');
+Route::put('/students/{student}', [StudentController::class, 'update'])->name('students.update');
 
 Route::get('/shifts', [ShiftController::class, 'index'])->name('shifts.index');
 Route::post('/shifts', [ShiftController::class, 'store'])->name('shifts.store');

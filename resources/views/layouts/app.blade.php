@@ -2,39 +2,63 @@
 <html lang="ar">
 
 <head>
-    <meta charset="UTF-8">
-    <title>لوحة الإدارة</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8" />
+    <title>لوحة الإدارة المسجد</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <!-- Bootstrap RTL -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" />
 </head>
 
 <body dir="rtl">
     <!-- شريط التنقل -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
         <div class="container">
-            <a class="navbar-brand" href="#">لوحة الإدارة</a>
-            <div>
-                <a href="{{ route('dashboard') }}" class="btn btn-outline-light me-2">الرئيسية</a>
-                <a href="{{ route('students.index') }}" class="btn btn-outline-light me-2">الطلاب</a>
-                <a href="{{ route('points.index') }}" class="btn btn-outline-light me-2">النقاط</a>
-                <a href="{{ route('shifts.index') }}" class="btn btn-outline-light me-2">الفترات</a>
-                <a href="{{ route('attendance.byShift') }}" class="btn btn-outline-light">دوام حسب الفترة</a>
-                <a href="{{ route('attendance.monthlyReport') }}" class="btn btn-outline-light me-2">تقرير شهري</a>
-                <form action="{{ route('logout') }}" method="POST" class="d-inline">
+            <a class="navbar-brand" href="#">لوحة الإدارة المسجد</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown"
+                aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="تبديل التنقل">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('dashboard') }}">الرئيسية</a>
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            إدارة الطلاب
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ route('students.index') }}">الطلاب</a></li>
+                            <li><a class="dropdown-item" href="{{ route('points.index') }}">النقاط</a></li>
+                            <li><a class="dropdown-item" href="{{ route('shifts.index') }}">الفترات</a></li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            تقارير الدوام
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ route('attendance.byShift') }}">دوام حسب الفترة</a></li>
+                            <li><a class="dropdown-item" href="{{ route('attendance.monthlyReport') }}">تقرير شهري</a></li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <form action="{{ route('logout') }}" method="POST" class="d-flex">
                     @csrf
-                    <button class="btn btn-outline-danger">تسجيل الخروج</button>
+                    <button class="btn btn-outline-danger" type="submit">تسجيل الخروج</button>
                 </form>
-
-
             </div>
         </div>
     </nav>
 
     <!-- محتوى الصفحة -->
     <div class="container">
-
         {{-- إشعارات النجاح أو الخطأ --}}
         @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">

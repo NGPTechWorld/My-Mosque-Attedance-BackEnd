@@ -2,6 +2,7 @@
 
 @section('content')
     <h2>لوحة الإحصائيات العامة</h2>
+    <br>
     <div class="row">
         <div class="col-md-3">
             <div class="card text-bg-primary mb-3">

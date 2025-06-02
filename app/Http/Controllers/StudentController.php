@@ -10,6 +10,15 @@ use Illuminate\Support\Facades\Http;
 
 class StudentController extends Controller
 {
+    public function search(Request $request)
+    {
+        $query = $request->input('search');
+
+        $students = Student::where('name', 'like', "%{$query}%")->get();
+
+        // أرجع النتائج كـ JSON
+        return response()->json($students);
+    }
     public function index()
     {
         return Student::with('shift')->get();
@@ -32,16 +41,30 @@ class StudentController extends Controller
 
     public function update(Request $request, $id)
     {
+        $request->validate([
+            'name' => 'required|string',
+            'guardian_phone' => 'required|string',
+            'shift_id' => 'required|exists:shifts,id',
+        ]);
+
         $student = Student::findOrFail($id);
-        $student->update($request->only(['name', 'guardian_phone', 'shift_id']));
-        return response()->json($student);
+        $student->update([
+            'name' => $request->name,
+            'guardian_phone' => $request->guardian_phone,
+            'shift_id' => $request->shift_id,
+        ]);
+
+        return redirect()->route('students.index')->with('success', 'تم تعديل بيانات الطالب بنجاح.');
     }
 
-    public function destroy($id)
+
+
+    public function destroy(Student $student)
     {
-        Student::destroy($id);
-        return response()->json(['message' => 'تم حذف الطالب']);
+        $student->delete();
+        return redirect()->route('students.index')->with('success', 'تم حذف الطالب بنجاح');
     }
+
 
     // إدارة النقاط
     public function updatePoints(Request $request, $id)
@@ -98,9 +121,15 @@ class StudentController extends Controller
         return view('students.index', compact('students'));
     }
 
-    public function showPoints()
+    public function showPoints(Request $request)
     {
-        $students = Student::all();
+        $query = Student::query();
+
+        if ($request->has('search') && $request->search != '') {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        $students = $query->get();
         return view('points.index', compact('students'));
     }
 
@@ -126,11 +155,16 @@ class StudentController extends Controller
         ]);
 
         // ارسال رسالة واتساب لولي الأمر
-        $this->sendWhatsAppMessage($student->guardian_phone, $student->name, $today);
-
-
+       // $this->sendWhatsAppMessage($student->guardian_phone, $student->name, $today);
         return back()->with('success', 'تم تسجيل الحضور بنجاح');
     }
+   public function edit($id)
+{
+    $student = Student::findOrFail($id);
+    $shifts = Shift::all(); // لعرض كل الفترات في القائمة المنسدلة
+    return view('students.edit', compact('student', 'shifts'));
+}
+
 
     private function sendWhatsAppMessage($phone, $studentName, $time)
     {
