@@ -199,14 +199,17 @@ class AttendanceController extends Controller
      */
     private function notifyAttendance(Student $student, Carbon $time): void
     {
+        // صيغة 12 ساعة بالعربي (مثال: "3:05 مساءً" بدل "15:05")
+        $timeFormatted = $time->format('g:i') . ' ' . ($time->format('A') === 'AM' ? 'صباحاً' : 'مساءً');
+
         $title = 'تسجيل حضور';
-        $body = "تم تسجيل دخول الطالب {$student->name} الساعة " . $time->format('H:i');
+        $body = "تم تسجيل دخول الطالب {$student->name} الساعة " . $timeFormatted;
 
         $data = [
             'type' => 'attendance',
             'student_id' => $student->id,
             'date' => $time->toDateString(),
-            'time' => $time->format('H:i'),
+            'time' => $timeFormatted,
         ];
 
         // 1) حفظ الإشعار في سجل الإشعارات (يظهر داخل التطبيق)
