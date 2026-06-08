@@ -6,6 +6,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\ParentController;
+use App\Http\Controllers\TeacherController;
 
 // الطلاب
 Route::get('/students', [StudentController::class, 'index']);
@@ -24,6 +25,10 @@ Route::delete('/shifts/{id}', [ShiftController::class, 'destroy']);
 // الحضور
 Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn']);
 Route::get('/attendance', [AttendanceController::class, 'index']);
+
+// الأساتذة
+Route::get('/teachers', [TeacherController::class, 'index_api']);
+Route::post('/teachers/check-in', [TeacherController::class, 'checkInApi']);
 
 // تطبيق الأهل
 Route::prefix('parent')->group(function () {
