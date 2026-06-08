@@ -2,7 +2,6 @@
 @section('content')
     <h2>عرض الحضور حسب الفترة</h2>
     <br>
-    <button id="exportBtn" class="btn btn-success mb-3">تصدير CSV</button>
 
     <form method="GET" class="mb-4">
         <div class="row">
@@ -22,8 +21,13 @@
         </div>
     </form>
 
-    @if($students)
-        <table class="table table-bordered">
+    @if($students !== null)
+        {{-- جدول الطلاب --}}
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h4 class="mb-0">الطلاب</h4>
+            <button class="btn btn-success btn-sm export-btn" data-target="studentsTable" data-prefix="الطلاب">تصدير CSV</button>
+        </div>
+        <table id="studentsTable" class="table table-bordered">
             <thead>
                 <tr>
                     <th>الطالب</th>
@@ -43,49 +47,63 @@
                         </td>
                     </tr>
                 @endforeach
+                @if($students->isEmpty())
+                    <tr><td colspan="2" class="text-center">لا يوجد طلاب في هذه الفترة</td></tr>
+                @endif
+            </tbody>
+        </table>
+
+        {{-- جدول الأساتذة --}}
+        <div class="d-flex justify-content-between align-items-center mb-2 mt-4">
+            <h4 class="mb-0">الأساتذة</h4>
+            <button class="btn btn-success btn-sm export-btn" data-target="teachersTable" data-prefix="الأساتذة">تصدير CSV</button>
+        </div>
+        <table id="teachersTable" class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>الأستاذ</th>
+                    <th>المادة</th>
+                    <th>الحضور</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($teachers as $t)
+                    <tr>
+                        <td>{{ $t->name }}</td>
+                        <td>{{ $t->subject }}</td>
+                        <td>
+                            @if($t->attendances->isNotEmpty())
+                                ✅ {{ \Carbon\Carbon::parse($t->attendances[0]->check_in_time)->format('h:i A') }}
+                            @else
+                                ❌ غائب
+                            @endif
+                        </td>
+                    </tr>
+                @endforeach
+                @if($teachers->isEmpty())
+                    <tr><td colspan="3" class="text-center">لا يوجد أساتذة في هذه الفترة</td></tr>
+                @endif
             </tbody>
         </table>
     @endif
 
     <script>
-        function toArabicNumbers(str) {
-            const arabicNums = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-            return str.replace(/\d/g, d => arabicNums[d]);
-        }
-
-        function exportTableToCSV(filename) {
+        function exportTableToCSV(table, filename) {
             const rows = [];
-            const table = document.querySelector('table');
-            if (!table) {
-                alert('لم يتم العثور على الجدول!');
-                return;
-            }
-            const trs = table.querySelectorAll('tr');
-
-            trs.forEach(tr => {
-                const cols = tr.querySelectorAll('th, td');
+            table.querySelectorAll('tr').forEach(tr => {
                 const row = [];
-
-                cols.forEach(col => {
+                tr.querySelectorAll('th, td').forEach(col => {
                     let text = col.innerText.trim();
-
-                    // استبدال الرموز ✅ و ❌ بالنص العربي
-                    if (text === '✅') text = 'حاضر';
-                    if (text === '❌') text = 'غائب';
-
-                    // لف النص بين علامات اقتباس لمنع مشاكل الفواصل في النص
+                    if (text.includes('✅')) text = text.replace('✅', 'حاضر');
+                    if (text.includes('❌')) text = text.replace('❌', 'غائب');
                     text = `"${text.replace(/"/g, '""')}"`;
-
                     row.push(text);
                 });
-
                 rows.push(row.join(','));
             });
 
-            const csvString = rows.join('\n');
-            const BOM = "\uFEFF"; // لضمان ترميز UTF-8
-
-            const blob = new Blob([BOM + csvString], { type: 'text/csv;charset=utf-8;' });
+            const BOM = "﻿";
+            const blob = new Blob([BOM + rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
             link.download = filename;
@@ -94,11 +112,14 @@
             document.body.removeChild(link);
         }
 
-        document.getElementById('exportBtn').addEventListener('click', () => {
-            const shiftName = document.querySelector('select[name="shift_id"] option:checked').textContent.trim();
-            const date = document.querySelector('input[name="date"]').value;
-            const filename = `تقرير_الحضور_${shiftName}_${date}.csv`;
-            exportTableToCSV(filename);
+        document.querySelectorAll('.export-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const table = document.getElementById(btn.dataset.target);
+                if (!table) { alert('لم يتم العثور على الجدول!'); return; }
+                const shiftName = document.querySelector('select[name="shift_id"] option:checked').textContent.trim();
+                const date = document.querySelector('input[name="date"]').value;
+                exportTableToCSV(table, `${btn.dataset.prefix}_${shiftName}_${date}.csv`);
+            });
         });
     </script>
 @endsection

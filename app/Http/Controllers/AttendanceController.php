@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Student;
 use App\Models\Attendance;
+use App\Models\Teacher;
 use App\Services\AttendanceNotifier;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -60,14 +61,20 @@ class AttendanceController extends Controller
     {
         $shifts = Shift::all();
         $students = null;
+        $teachers = null;
 
         if ($request->shift_id && $request->date) {
             $students = Student::with(['attendances' => function ($q) use ($request) {
                 $q->where('date', $request->date);
             }])->where('shift_id', $request->shift_id)->get();
+
+            // أساتذة نفس الفترة وحضورهم بنفس التاريخ
+            $teachers = Teacher::with(['attendances' => function ($q) use ($request) {
+                $q->where('date', $request->date);
+            }])->where('shift_id', $request->shift_id)->get();
         }
 
-        return view('attendance.by_shift', compact('shifts', 'students'));
+        return view('attendance.by_shift', compact('shifts', 'students', 'teachers'));
     }
 
 
