@@ -22,6 +22,7 @@ Route::delete('/students/{student}', [StudentController::class, 'destroy'])->nam
 Route::get('/points', [StudentController::class, 'showPoints'])->name('points.index');
 Route::patch('/students/{id}/points', [StudentController::class, 'updatePoints'])->name('students.updatePoints');
 Route::get('/students/create', [StudentController::class, 'create'])->name('students.create');
+Route::get('/students/{id}/qr', [StudentController::class, 'qr'])->name('students.qr');
 Route::get('/students/{id}', [StudentController::class, 'show'])->name('students.show');
 Route::get('/students/search', [StudentController::class, 'search']);
 Route::get('students/{student}/edit', [StudentController::class, 'edit'])->name('students.edit');

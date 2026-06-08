@@ -8,6 +8,7 @@
         <thead>
             <tr>
                 <th style="width: 60px; max-width: 60px;">الرقم </th>
+                <th>الكود</th>
                 <th>الاسم</th>
                 <th>الهاتف</th>
                 <th>الفترة</th>
@@ -19,6 +20,7 @@
             @foreach ($students as $student)
                 <tr>
                     <td style="width: 60px; max-width: 60px; text-align: center;">{{ $student->id }}</td>
+                    <td class="text-center">{{ $student->code }}</td>
                     <td>{{ $student->name }}</td>
                     <td>{{ $student->guardian_phone }}</td>
                     <td>{{ $student->shift->name ?? 'غير محددة' }}</td>
@@ -29,6 +31,8 @@
                             @csrf
                             <button class="btn btn-success btn-sm">تسجيل حضور</button>
                         </form>
+
+                        <a href="{{ route('students.qr', $student->id) }}" class="btn btn-info btn-sm" target="_blank">QR</a>
 
                         <a href="{{ route('students.edit', $student->id) }}" class="btn btn-warning btn-sm">تعديل</a>
 

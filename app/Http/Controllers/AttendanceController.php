@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Student;
 use App\Models\Attendance;
+use App\Models\ParentNotification;
+use App\Services\FcmService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
@@ -14,6 +16,10 @@ use Illuminate\Validation\ValidationException;
 
 class AttendanceController extends Controller
 {
+    public function __construct(private FcmService $fcm)
+    {
+    }
+
     public function monthlyReport(Request $request)
     {
         $shiftId = $request->input('shift_id');
@@ -116,11 +122,16 @@ class AttendanceController extends Controller
     {
         try {
             $request->validate([
-                'student_id' => 'required|exists:students,id',
+                'student_id' => 'required',
                 'date' => 'nullable|date',
             ]);
 
-            $student = Student::with('shift')->findOrFail($request->student_id);
+            // القيمة الممسوحة من الـ QR قد تكون الكود اليدوي أو الـ id
+            $student = Student::resolveByCodeOrId($request->student_id);
+            if (! $student) {
+                return response()->json(['message' => 'الطالب غير موجود.'], 404);
+            }
+            $student->load('shift');
             $shift = $student->shift;
 
             $today = $request->date ? Carbon::parse($request->date) : Carbon::now();
@@ -153,11 +164,8 @@ class AttendanceController extends Controller
                 'check_in_time' => $currentTime,
             ]);
 
-            try {
-                $this->sendWhatsAppMessage($student->guardian_phone, $student->name, $today);
-            } catch (\Exception $e) {
-                Log::error("Failed to send WhatsApp message: " . $e->getMessage());
-            }
+            // إنشاء سجل إشعار + إرسال إشعار Firebase لتطبيق الأهل
+            $this->notifyAttendance($student, $today);
 
             return response()->json([
                 'message' => 'تم تسجيل الحضور بنجاح.',
@@ -174,25 +182,41 @@ class AttendanceController extends Controller
         }
     }
 
-    private function sendWhatsAppMessage($phone, $studentName, $time)
+    /**
+     * تسجيل إشعار الحضور في قاعدة البيانات وإرساله عبر Firebase لتطبيق الأهل.
+     */
+    private function notifyAttendance(Student $student, Carbon $time): void
     {
-        $instanceId = "instance123113";
-        $token = "num5sceyvg5215a3";
+        $title = 'تسجيل حضور';
+        $body = "تم تسجيل دخول الطالب {$student->name} الساعة " . $time->format('H:i');
 
-        $phone = ltrim($phone, '+');
+        $data = [
+            'type' => 'attendance',
+            'student_id' => $student->id,
+            'date' => $time->toDateString(),
+            'time' => $time->format('H:i'),
+        ];
 
-        $message = "السلام عليكم ورحمة الله وبركاته\n";
-        $message .= "تم تسجيل دخول الطالب: $studentName\n";
-        $message .= "في الساعة " . $time->format('H:i') . "\n\n";
-        $message .= "إدارة مسجد الشيخ عبد الغني الغنيمي";
+        // 1) حفظ الإشعار في سجل الإشعارات (يظهر داخل التطبيق)
+        try {
+            ParentNotification::create([
+                'student_id' => $student->id,
+                'guardian_phone' => $student->guardian_phone,
+                'type' => 'attendance',
+                'title' => $title,
+                'body' => $body,
+                'data' => $data,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to store attendance notification: ' . $e->getMessage());
+        }
 
-        $response = Http::asForm()->post("https://api.ultramsg.com/{$instanceId}/messages/chat", [
-            'token' => $token,
-            'to' => $phone,
-            'body' => $message,
-        ]);
-
-        logger("WhatsApp message sent to {$phone}, response: " . $response->body());
+        // 2) إرسال إشعار Firebase لأجهزة الأهل
+        try {
+            $this->fcm->sendToGuardian($student->guardian_phone, $title, $body, $data);
+        } catch (\Throwable $e) {
+            Log::error('Failed to send FCM attendance notification: ' . $e->getMessage());
+        }
     }
 
 

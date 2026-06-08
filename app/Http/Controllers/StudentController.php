@@ -6,6 +6,7 @@ use App\Models\Student;
 use Illuminate\Http\Request;
 use App\Models\Attendance;
 use App\Models\Shift;
+use App\Models\PointTransaction;
 use Illuminate\Support\Facades\Http;
 
 class StudentController extends Controller
@@ -27,12 +28,13 @@ class StudentController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'code' => 'required|string|unique:students,code',
             'name' => 'required',
             'guardian_phone' => 'required',
             'shift_id' => 'required|exists:shifts,id',
         ]);
 
-        Student::create($request->all());
+        Student::create($request->only(['code', 'name', 'guardian_phone', 'shift_id']));
 
         // نرجع للصفحة الرئيسية (مثلاً: students.index) مع رسالة نجاح
         return redirect()->route('students.index')->with('success', 'تم إضافة الطالب بنجاح');
@@ -42,6 +44,7 @@ class StudentController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
+            'code' => 'required|string|unique:students,code,' . $id,
             'name' => 'required|string',
             'guardian_phone' => 'required|string',
             'shift_id' => 'required|exists:shifts,id',
@@ -49,6 +52,7 @@ class StudentController extends Controller
 
         $student = Student::findOrFail($id);
         $student->update([
+            'code' => $request->code,
             'name' => $request->name,
             'guardian_phone' => $request->guardian_phone,
             'shift_id' => $request->shift_id,
@@ -66,26 +70,22 @@ class StudentController extends Controller
     }
 
 
-    // إدارة النقاط
+    // إدارة النقاط (من لوحة الويب)
     public function updatePoints(Request $request, $id)
     {
+        $request->validate([
+            'points' => 'required|integer',
+            'reason' => 'nullable|string|max:255',
+        ]);
+
         $student = Student::findOrFail($id);
+        $change = (int) $request->input('points');
 
-        if ($request->has('remove') && $request->remove == 1) {
-            $student->points = 0;
-        } else {
-            $change = (int)$request->input('points', 0);
-            $newPoints = $student->points + $change;
-
-            // لا تسمح بنقاط سالبة
-            if ($newPoints < 0) {
-                return back()->with('error', 'لا يمكن أن تكون النقاط أقل من صفر');
-            }
-
-            $student->points = $newPoints;
+        if ($student->points + $change < 0) {
+            return back()->with('error', 'لا يمكن أن تكون النقاط أقل من صفر');
         }
 
-        $student->save();
+        $this->recordPointChange($student, $change, $request->input('reason'));
 
         return back()->with('success', 'تم تحديث النقاط');
     }
@@ -93,16 +93,25 @@ class StudentController extends Controller
 
     public function updatePointsAPI(Request $request, $id)
     {
-        $student = Student::findOrFail($id);
-        $change = (int)$request->input('points');
+        // $id قد يكون الكود اليدوي (من الـ QR) أو الـ id الرقمي
+        $student = Student::resolveByCodeOrId($id);
+        if (! $student) {
+            return response()->json([
+                'success' => false,
+                'message' => 'الطالب غير موجود',
+            ], 404);
+        }
+        $change = (int) $request->input('points');
+        $reason = $request->input('reason');
 
-        if ($request->has('remove') && $request->remove == 1) {
-            $student->points = 0;
-        } else {
-            $student->points += $change;
+        if ($student->points + $change < 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لا يمكن أن تكون النقاط أقل من صفر',
+            ], 422);
         }
 
-        $student->save();
+        $this->recordPointChange($student, $change, $reason);
 
         return response()->json([
             'success' => true,
@@ -112,6 +121,27 @@ class StudentController extends Controller
                 'name' => $student->name,
                 'points' => $student->points,
             ]
+        ]);
+    }
+
+    /**
+     * تطبيق تغيير على نقاط الطالب وتسجيله في سجل العمليات (المحفظة).
+     *
+     * @param  Student  $student
+     * @param  int      $change  رقم موجب للإضافة، سالب للحذف
+     * @param  string|null  $reason
+     */
+    private function recordPointChange(Student $student, int $change, ?string $reason): void
+    {
+        $student->points += $change;
+        $student->save();
+
+        PointTransaction::create([
+            'student_id' => $student->id,
+            'type' => $change >= 0 ? 'add' : 'remove',
+            'amount' => abs($change),
+            'reason' => $reason,
+            'balance_after' => $student->points,
         ]);
     }
 
@@ -198,5 +228,12 @@ class StudentController extends Controller
     {
         $student = Student::with('attendances')->findOrFail($id);
         return view('students.show', compact('student'));
+    }
+
+    // عرض/طباعة كود الـ QR الخاص بالطالب
+    public function qr($id)
+    {
+        $student = Student::findOrFail($id);
+        return view('students.qr', compact('student'));
     }
 }

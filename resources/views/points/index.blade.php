@@ -21,13 +21,20 @@
         </div>
     </form>
 
-    <table class="table table-bordered">
+    @if (session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+    @if (session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
+
+    <table class="table table-bordered align-middle">
         <thead>
             <tr>
                 <th style="width: 60px;">ID</th>
                 <th>الاسم</th>
                 <th>النقاط الحالية</th>
-                <th>تعديل</th>
+                <th style="width: 45%;">تعديل النقاط</th>
             </tr>
         </thead>
         <tbody>
@@ -35,13 +42,20 @@
                 <tr>
                     <td class="text-center">{{ $student->id }}</td>
                     <td>{{ $student->name }}</td>
-                    <td>{{ $student->points }}</td>
+                    <td class="text-center fw-bold">{{ $student->points }}</td>
                     <td>
-                        <form method="POST" action="{{ route('students.updatePoints', $student->id) }}" class="d-flex">
+                        <form method="POST" action="{{ route('students.updatePoints', $student->id) }}" class="row g-2">
                             @csrf
                             @method('PATCH')
-                            <input type="number" name="points" class="form-control me-2" placeholder="مثلاً 5 أو -2" required>
-                            <button class="btn btn-primary">تحديث</button>
+                            <div class="col-3">
+                                <input type="number" name="points" class="form-control" placeholder="مثلاً 5 أو -2" required>
+                            </div>
+                            <div class="col-6">
+                                <input type="text" name="reason" class="form-control" placeholder="سبب الإضافة / الحذف">
+                            </div>
+                            <div class="col-3">
+                                <button class="btn btn-primary w-100">تحديث</button>
+                            </div>
                         </form>
                     </td>
                 </tr>
@@ -54,4 +68,5 @@
             @endif
         </tbody>
     </table>
+    <small class="text-muted">يظهر السبب والكمية في محفظة الأهل داخل التطبيق.</small>
 @endsection

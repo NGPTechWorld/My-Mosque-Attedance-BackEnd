@@ -3,9 +3,22 @@
 <h2>إضافة طالب جديد</h2>
 <form method="POST" action="{{ route('students.store') }}">
     @csrf
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+    <div class="mb-3">
+        <label>كود الطالب (يُستخدم في الـ QR):</label>
+        <input name="code" class="form-control" value="{{ old('code') }}" required>
+    </div>
     <div class="mb-3">
         <label>الاسم:</label>
-        <input name="name" class="form-control" required>
+        <input name="name" class="form-control" value="{{ old('name') }}" required>
     </div>
     <div class="mb-3">
         <label>هاتف ولي الأمر:</label>

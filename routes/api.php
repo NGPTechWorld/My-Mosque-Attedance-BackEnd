@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\ParentController;
 
 // الطلاب
 Route::get('/students', [StudentController::class, 'index']);
@@ -23,3 +24,15 @@ Route::delete('/shifts/{id}', [ShiftController::class, 'destroy']);
 // الحضور
 Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn']);
 Route::get('/attendance', [AttendanceController::class, 'index']);
+
+// تطبيق الأهل
+Route::prefix('parent')->group(function () {
+    Route::post('/students/add', [ParentController::class, 'addStudent']);   // دخول / إضافة طالب
+    Route::get('/students', [ParentController::class, 'myStudents']);          // قائمة الطلاب حسب رقم الأهل
+    Route::get('/students/{id}', [ParentController::class, 'showStudent']);    // بيانات طالب
+    Route::get('/students/{id}/notifications', [ParentController::class, 'notifications']);
+    Route::get('/students/{id}/points', [ParentController::class, 'points']);  // محفظة النقاط
+    Route::get('/notifications', [ParentController::class, 'allNotifications']);
+    Route::post('/notifications/{id}/read', [ParentController::class, 'markRead']);
+    Route::post('/device', [ParentController::class, 'registerDevice']);       // تسجيل FCM token
+});

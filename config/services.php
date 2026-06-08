@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    // إعدادات Firebase Cloud Messaging (FCM HTTP v1)
+    'firebase' => [
+        // معرّف مشروع Firebase (موجود في ملف الـ service account كـ project_id)
+        'project_id' => env('FIREBASE_PROJECT_ID'),
+        // المسار إلى ملف الـ service account (JSON). يفضّل وضعه خارج public.
+        // مثال: storage_path('app/firebase/service-account.json')
+        'credentials' => env('FIREBASE_CREDENTIALS', storage_path('app/firebase/service-account.json')),
+    ],
+
 ];
