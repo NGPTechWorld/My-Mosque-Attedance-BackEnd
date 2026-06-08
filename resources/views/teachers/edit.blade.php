@@ -29,6 +29,15 @@
         <label>المادة / الحلقة:</label>
         <input name="subject" class="form-control" value="{{ old('subject', $teacher->subject) }}">
     </div>
+    <div class="mb-3">
+        <label>الفترة:</label>
+        <select name="shift_id" class="form-select">
+            <option value="">-- بدون فترة --</option>
+            @foreach($shifts as $shift)
+                <option value="{{ $shift->id }}" {{ old('shift_id', $teacher->shift_id) == $shift->id ? 'selected' : '' }}>{{ $shift->name }}</option>
+            @endforeach
+        </select>
+    </div>
     <button class="btn btn-primary">حفظ التعديلات</button>
     <a href="{{ route('teachers.index') }}" class="btn btn-secondary">رجوع</a>
 </form>

@@ -17,6 +17,7 @@
                 <th>الاسم</th>
                 <th>الهاتف</th>
                 <th>المادة</th>
+                <th>الفترة</th>
                 <th>حضور اليوم</th>
                 <th>إجراءات</th>
             </tr>
@@ -29,6 +30,7 @@
                     <td>{{ $teacher->name }}</td>
                     <td>{{ $teacher->phone }}</td>
                     <td>{{ $teacher->subject }}</td>
+                    <td>{{ $teacher->shift->name ?? '—' }}</td>
                     <td class="text-center">
                         @if ($teacher->attendances->isNotEmpty())
                             <span class="badge bg-success">
@@ -58,7 +60,7 @@
             @endforeach
 
             @if ($teachers->isEmpty())
-                <tr><td colspan="7" class="text-center">لا يوجد أساتذة بعد</td></tr>
+                <tr><td colspan="8" class="text-center">لا يوجد أساتذة بعد</td></tr>
             @endif
         </tbody>
     </table>

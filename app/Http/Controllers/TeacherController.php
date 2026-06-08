@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Teacher;
 use App\Models\TeacherAttendance;
+use App\Models\Shift;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -14,7 +15,7 @@ class TeacherController extends Controller
     public function index()
     {
         $today = now()->toDateString();
-        $teachers = Teacher::with(['attendances' => function ($q) use ($today) {
+        $teachers = Teacher::with(['shift', 'attendances' => function ($q) use ($today) {
             $q->where('date', $today);
         }])->get();
 
@@ -23,7 +24,8 @@ class TeacherController extends Controller
 
     public function create()
     {
-        return view('teachers.create');
+        $shifts = Shift::all();
+        return view('teachers.create', compact('shifts'));
     }
 
     public function store(Request $request)
@@ -33,9 +35,10 @@ class TeacherController extends Controller
             'name' => 'required|string',
             'phone' => 'nullable|string',
             'subject' => 'nullable|string',
+            'shift_id' => 'nullable|exists:shifts,id',
         ]);
 
-        Teacher::create($request->only(['code', 'name', 'phone', 'subject']));
+        Teacher::create($request->only(['code', 'name', 'phone', 'subject', 'shift_id']));
 
         return redirect()->route('teachers.index')->with('success', 'تم إضافة الأستاذ بنجاح');
     }
@@ -43,7 +46,8 @@ class TeacherController extends Controller
     public function edit($id)
     {
         $teacher = Teacher::findOrFail($id);
-        return view('teachers.edit', compact('teacher'));
+        $shifts = Shift::all();
+        return view('teachers.edit', compact('teacher', 'shifts'));
     }
 
     public function update(Request $request, $id)
@@ -53,10 +57,11 @@ class TeacherController extends Controller
             'name' => 'required|string',
             'phone' => 'nullable|string',
             'subject' => 'nullable|string',
+            'shift_id' => 'nullable|exists:shifts,id',
         ]);
 
         $teacher = Teacher::findOrFail($id);
-        $teacher->update($request->only(['code', 'name', 'phone', 'subject']));
+        $teacher->update($request->only(['code', 'name', 'phone', 'subject', 'shift_id']));
 
         return redirect()->route('teachers.index')->with('success', 'تم تعديل بيانات الأستاذ');
     }
@@ -97,17 +102,58 @@ class TeacherController extends Controller
         return view('teachers.qr', compact('teacher'));
     }
 
-    // تقرير حضور الأساتذة بين تاريخين
+    // تقرير حضور/غياب الأساتذة بين تاريخين (حسب أيام الفترة)
     public function report(Request $request)
     {
         $from = $request->input('from', now()->startOfMonth()->toDateString());
         $to = $request->input('to', now()->toDateString());
 
-        $teachers = Teacher::with(['attendances' => function ($q) use ($from, $to) {
+        $teachers = Teacher::with(['shift', 'attendances' => function ($q) use ($from, $to) {
             $q->whereBetween('date', [$from, $to])->orderBy('date');
         }])->get();
 
-        return view('teachers.report', compact('teachers', 'from', 'to'));
+        $start = Carbon::parse($from);
+        $end = Carbon::parse($to);
+
+        $rows = $teachers->map(function ($teacher) use ($start, $end) {
+            $days = $teacher->shift->days ?? [];               // أيام دوام الفترة (0=الأحد..6=السبت)
+            $attended = $teacher->attendances->keyBy('date');  // date => attendance
+
+            $present = 0;
+            $absent = 0;
+            $details = [];
+
+            if (! empty($days)) {
+                $cursor = $start->copy();
+                while ($cursor <= $end) {
+                    if (in_array($cursor->dayOfWeek, $days)) {
+                        $date = $cursor->toDateString();
+                        if ($attended->has($date)) {
+                            $present++;
+                            $details[] = [
+                                'date' => $date,
+                                'present' => true,
+                                'time' => $attended[$date]->check_in_time,
+                            ];
+                        } else {
+                            $absent++;
+                            $details[] = ['date' => $date, 'present' => false, 'time' => null];
+                        }
+                    }
+                    $cursor->addDay();
+                }
+            }
+
+            return [
+                'teacher' => $teacher,
+                'present' => $present,
+                'absent' => $absent,
+                'expected' => $present + $absent,
+                'details' => $details,
+            ];
+        });
+
+        return view('teachers.report', compact('rows', 'from', 'to'));
     }
 
     // ===== API (لتطبيق الإدارة عبر الـ QR) =====

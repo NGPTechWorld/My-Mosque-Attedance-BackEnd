@@ -11,11 +11,17 @@ class Teacher extends Model
         'name',
         'phone',
         'subject',
+        'shift_id',
     ];
 
     public function attendances()
     {
         return $this->hasMany(TeacherAttendance::class);
+    }
+
+    public function shift()
+    {
+        return $this->belongsTo(Shift::class);
     }
 
     /**

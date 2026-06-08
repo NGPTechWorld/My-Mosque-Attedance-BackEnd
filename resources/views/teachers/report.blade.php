@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
 @section('content')
-    <h2>تقرير حضور الأساتذة</h2>
-    <br>
+    <h2>تقرير حضور وغياب الأساتذة</h2>
+    <p class="text-muted">يُحسب الغياب حسب أيام دوام فترة الأستاذ ضمن الفترة الزمنية المختارة.</p>
 
     <form method="GET" class="row g-2 mb-3">
         <div class="col-auto">
@@ -22,31 +22,49 @@
         <thead>
             <tr>
                 <th>الأستاذ</th>
-                <th>المادة</th>
-                <th>عدد أيام الحضور</th>
-                <th>التواريخ</th>
+                <th>الفترة</th>
+                <th class="text-center">أيام الدوام</th>
+                <th class="text-center">حضور</th>
+                <th class="text-center">غياب</th>
+                <th>التفصيل</th>
             </tr>
         </thead>
         <tbody>
-            @foreach ($teachers as $teacher)
+            @foreach ($rows as $row)
+                @php($teacher = $row['teacher'])
                 <tr>
-                    <td>{{ $teacher->name }}</td>
-                    <td>{{ $teacher->subject }}</td>
-                    <td class="text-center fw-bold">{{ $teacher->attendances->count() }}</td>
                     <td>
-                        @forelse ($teacher->attendances as $att)
-                            <span class="badge bg-success me-1">
-                                {{ $att->date }} ({{ \Carbon\Carbon::parse($att->check_in_time)->format('g:i A') }})
-                            </span>
-                        @empty
-                            <span class="text-muted">لا يوجد</span>
-                        @endforelse
+                        {{ $teacher->name }}
+                        @if ($teacher->subject)
+                            <small class="text-muted d-block">{{ $teacher->subject }}</small>
+                        @endif
+                    </td>
+                    <td>{{ $teacher->shift->name ?? '—' }}</td>
+                    <td class="text-center">{{ $row['expected'] }}</td>
+                    <td class="text-center"><span class="badge bg-success">{{ $row['present'] }}</span></td>
+                    <td class="text-center"><span class="badge bg-danger">{{ $row['absent'] }}</span></td>
+                    <td>
+                        @if (! $teacher->shift)
+                            <span class="text-muted">لا توجد فترة محدّدة لهذا الأستاذ</span>
+                        @elseif (empty($row['details']))
+                            <span class="text-muted">لا أيام دوام ضمن المدة</span>
+                        @else
+                            @foreach ($row['details'] as $d)
+                                @if ($d['present'])
+                                    <span class="badge bg-success me-1 mb-1">
+                                        ✅ {{ $d['date'] }} ({{ \Carbon\Carbon::parse($d['time'])->format('g:i A') }})
+                                    </span>
+                                @else
+                                    <span class="badge bg-danger me-1 mb-1">❌ {{ $d['date'] }}</span>
+                                @endif
+                            @endforeach
+                        @endif
                     </td>
                 </tr>
             @endforeach
 
-            @if ($teachers->isEmpty())
-                <tr><td colspan="4" class="text-center">لا يوجد أساتذة</td></tr>
+            @if ($rows->isEmpty())
+                <tr><td colspan="6" class="text-center">لا يوجد أساتذة</td></tr>
             @endif
         </tbody>
     </table>
