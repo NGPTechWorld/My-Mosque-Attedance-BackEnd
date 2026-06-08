@@ -28,10 +28,19 @@ class AttendanceController extends Controller
 
         $shifts = Shift::all();
         $students = collect();
+        $teachers = collect();
         $dates = [];
+        $shiftDays = [];   // أيام دوام الفترة (0=الأحد..6=السبت)
 
         if ($shiftId) {
+            $shift = Shift::find($shiftId);
+            $shiftDays = $shift->days ?? [];
+
             $students = Student::with(['attendances' => function ($q) use ($month) {
+                $q->where('date', 'like', $month . '%');
+            }])->where('shift_id', $shiftId)->get();
+
+            $teachers = Teacher::with(['attendances' => function ($q) use ($month) {
                 $q->where('date', 'like', $month . '%');
             }])->where('shift_id', $shiftId)->get();
 
@@ -44,7 +53,7 @@ class AttendanceController extends Controller
             }
         }
 
-        return view('attendance.monthly_report', compact('shifts', 'students', 'dates', 'shiftId', 'month'));
+        return view('attendance.monthly_report', compact('shifts', 'students', 'teachers', 'dates', 'shiftId', 'month', 'shiftDays'));
     }
     // تقرير حضور يوم الجمعة (مأخوذ من نسخة attendance-system-server)
     public function fridayReport(Request $request)
@@ -55,7 +64,11 @@ class AttendanceController extends Controller
             $q->where('date', $date);
         }])->get();
 
-        return view('attendance.friday_report', compact('students', 'date'));
+        $teachers = Teacher::with(['attendances' => function ($q) use ($date) {
+            $q->where('date', $date);
+        }])->get();
+
+        return view('attendance.friday_report', compact('students', 'teachers', 'date'));
     }
 
     public function byShift(Request $request)
