@@ -4,8 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Student;
 use App\Models\Attendance;
-use App\Models\ParentNotification;
-use App\Services\FcmService;
+use App\Services\AttendanceNotifier;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
@@ -16,7 +15,7 @@ use Illuminate\Validation\ValidationException;
 
 class AttendanceController extends Controller
 {
-    public function __construct(private FcmService $fcm)
+    public function __construct(private AttendanceNotifier $notifier)
     {
     }
 
@@ -177,7 +176,7 @@ class AttendanceController extends Controller
             ]);
 
             // إنشاء سجل إشعار + إرسال إشعار Firebase لتطبيق الأهل
-            $this->notifyAttendance($student, $today);
+            $this->notifier->notify($student, $today);
 
             return response()->json([
                 'message' => 'تم تسجيل الحضور بنجاح.',
@@ -193,49 +192,6 @@ class AttendanceController extends Controller
             return response()->json(['message' => 'حدث خطأ غير متوقع، يرجى المحاولة لاحقاً.'], 500);
         }
     }
-
-    /**
-     * تسجيل إشعار الحضور في قاعدة البيانات وإرساله عبر Firebase لتطبيق الأهل.
-     */
-    private function notifyAttendance(Student $student, Carbon $time): void
-    {
-        // صيغة 12 ساعة بالعربي (مثال: "3:05 مساءً" بدل "15:05")
-        $timeFormatted = $time->format('g:i') . ' ' . ($time->format('A') === 'AM' ? 'صباحاً' : 'مساءً');
-
-        $title = 'تسجيل حضور';
-        $body = "تم تسجيل دخول الطالب {$student->name} الساعة " . $timeFormatted;
-
-        $data = [
-            'type' => 'attendance',
-            'student_id' => $student->id,
-            'date' => $time->toDateString(),
-            'time' => $timeFormatted,
-        ];
-
-        // 1) حفظ الإشعار في سجل الإشعارات (يظهر داخل التطبيق)
-        try {
-            ParentNotification::create([
-                'student_id' => $student->id,
-                'guardian_phone' => $student->guardian_phone,
-                'type' => 'attendance',
-                'title' => $title,
-                'body' => $body,
-                'data' => $data,
-            ]);
-        } catch (\Throwable $e) {
-            Log::error('Failed to store attendance notification: ' . $e->getMessage());
-        }
-
-        // 2) إرسال إشعار Firebase لأجهزة الأهل
-        try {
-            $this->fcm->sendToGuardian($student->guardian_phone, $title, $body, $data);
-        } catch (\Throwable $e) {
-            Log::error('Failed to send FCM attendance notification: ' . $e->getMessage());
-        }
-    }
-
-
-
 
     // عرض حضور طلاب فترة محددة
     public function index(Request $request)

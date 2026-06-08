@@ -7,10 +7,15 @@ use Illuminate\Http\Request;
 use App\Models\Attendance;
 use App\Models\Shift;
 use App\Models\PointTransaction;
+use App\Services\AttendanceNotifier;
 use Illuminate\Support\Facades\Http;
 
 class StudentController extends Controller
 {
+    public function __construct(private AttendanceNotifier $notifier)
+    {
+    }
+
     public function search(Request $request)
     {
         $query = $request->input('search');
@@ -184,8 +189,9 @@ class StudentController extends Controller
             'check_in_time' => $today->format('H:i:s'),
         ]);
 
-        // ارسال رسالة واتساب لولي الأمر
-       // $this->sendWhatsAppMessage($student->guardian_phone, $student->name, $today);
+        // إرسال إشعار Firebase + حفظه في سجل الإشعارات لتطبيق الأهل
+        $this->notifier->notify($student, $today);
+
         return back()->with('success', 'تم تسجيل الحضور بنجاح');
     }
    public function edit($id)
