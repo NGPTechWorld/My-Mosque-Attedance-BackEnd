@@ -45,6 +45,18 @@ class AttendanceController extends Controller
 
         return view('attendance.monthly_report', compact('shifts', 'students', 'dates', 'shiftId', 'month'));
     }
+    // تقرير حضور يوم الجمعة (مأخوذ من نسخة attendance-system-server)
+    public function fridayReport(Request $request)
+    {
+        $date = $request->input('date', now()->next(Carbon::FRIDAY)->toDateString());
+
+        $students = Student::with(['attendances' => function ($q) use ($date) {
+            $q->where('date', $date);
+        }])->get();
+
+        return view('attendance.friday_report', compact('students', 'date'));
+    }
+
     public function byShift(Request $request)
     {
         $shifts = Shift::all();

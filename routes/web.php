@@ -35,6 +35,7 @@ Route::delete('/shifts/{id}', [ShiftController::class, 'destroy'])->name('shifts
 Route::get('/attendance/by-shift', [AttendanceController::class, 'byShift'])->name('attendance.byShift');
 Route::post('/students', [StudentController::class, 'store'])->name('students.store');
 Route::get('/attendance/monthly-report', [AttendanceController::class, 'monthlyReport'])->name('attendance.monthlyReport');
+Route::get('/attendance/friday', [AttendanceController::class, 'fridayReport'])->name('attendance.friday');
 });
 
 

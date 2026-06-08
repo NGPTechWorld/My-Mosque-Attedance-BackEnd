@@ -45,6 +45,7 @@
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="{{ route('attendance.byShift') }}">دوام حسب الفترة</a></li>
                             <li><a class="dropdown-item" href="{{ route('attendance.monthlyReport') }}">تقرير شهري</a></li>
+                            <li><a class="dropdown-item" href="{{ route('attendance.friday') }}">تقرير الجمعة</a></li>
                         </ul>
                     </li>
                 </ul>
