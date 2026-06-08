@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Student;
 use App\Models\Attendance;
 use App\Models\Teacher;
+use App\Models\TeacherAttendance;
 use App\Services\AttendanceNotifier;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -144,6 +145,12 @@ class AttendanceController extends Controller
                 'date' => 'nullable|date',
             ]);
 
+            // إذا بدأ الكود الممسوح بحرف T → حضور أستاذ، وإلا حضور طالب
+            $scanned = (string) $request->student_id;
+            if (strtoupper(substr($scanned, 0, 1)) === 'T') {
+                return $this->teacherCheckIn($scanned, $request->date);
+            }
+
             // القيمة الممسوحة من الـ QR قد تكون الكود اليدوي أو الـ id
             $student = Student::resolveByCodeOrId($request->student_id);
             if (! $student) {
@@ -198,6 +205,42 @@ class AttendanceController extends Controller
             Log::error("Error in checkIn: " . $e->getMessage());
             return response()->json(['message' => 'حدث خطأ غير متوقع، يرجى المحاولة لاحقاً.'], 500);
         }
+    }
+
+    /**
+     * تسجيل حضور أستاذ (عند مسح كود يبدأ بـ T) — يُستدعى من نفس endpoint الحضور.
+     */
+    private function teacherCheckIn(string $code, ?string $date)
+    {
+        $teacher = Teacher::resolveByCodeOrId($code);
+        if (! $teacher) {
+            return response()->json(['message' => 'الأستاذ غير موجود.'], 404);
+        }
+
+        $today = $date ? Carbon::parse($date) : Carbon::now();
+
+        $already = TeacherAttendance::where('teacher_id', $teacher->id)
+            ->where('date', $today->toDateString())
+            ->exists();
+
+        if ($already) {
+            return response()->json(['message' => 'تم تسجيل حضور الأستاذ مسبقاً اليوم.'], 400);
+        }
+
+        $attendance = TeacherAttendance::create([
+            'teacher_id' => $teacher->id,
+            'date' => $today->toDateString(),
+            'check_in_time' => $today->format('H:i:s'),
+        ]);
+
+        return response()->json([
+            'message' => "تم تسجيل حضور الأستاذ {$teacher->name} بنجاح.",
+            'type' => 'teacher',
+            'teacher' => ['id' => $teacher->id, 'name' => $teacher->name],
+            'attendance' => $attendance,
+            'date' => $today->toDateString(),
+            'time' => $today->format('H:i:s'),
+        ]);
     }
 
     // عرض حضور طلاب فترة محددة

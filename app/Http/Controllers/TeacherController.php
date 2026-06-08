@@ -30,6 +30,9 @@ class TeacherController extends Controller
 
     public function store(Request $request)
     {
+        // كود الأستاذ يجب أن يبدأ دائماً بحرف T (لتمييزه عن الطلاب في QR)
+        $request->merge(['code' => $this->normalizeCode($request->code)]);
+
         $request->validate([
             'code' => 'nullable|string|unique:teachers,code',
             'name' => 'required|string',
@@ -38,7 +41,12 @@ class TeacherController extends Controller
             'shift_id' => 'nullable|exists:shifts,id',
         ]);
 
-        Teacher::create($request->only(['code', 'name', 'phone', 'subject', 'shift_id']));
+        $teacher = Teacher::create($request->only(['code', 'name', 'phone', 'subject', 'shift_id']));
+
+        // إن لم يُدخل كوداً، ولّد كوداً يبدأ بـ T تلقائياً
+        if (empty($teacher->code)) {
+            $teacher->update(['code' => 'T' . $teacher->id]);
+        }
 
         return redirect()->route('teachers.index')->with('success', 'تم إضافة الأستاذ بنجاح');
     }
@@ -52,6 +60,8 @@ class TeacherController extends Controller
 
     public function update(Request $request, $id)
     {
+        $request->merge(['code' => $this->normalizeCode($request->code)]);
+
         $request->validate([
             'code' => 'nullable|string|unique:teachers,code,' . $id,
             'name' => 'required|string',
@@ -63,7 +73,28 @@ class TeacherController extends Controller
         $teacher = Teacher::findOrFail($id);
         $teacher->update($request->only(['code', 'name', 'phone', 'subject', 'shift_id']));
 
+        if (empty($teacher->code)) {
+            $teacher->update(['code' => 'T' . $teacher->id]);
+        }
+
         return redirect()->route('teachers.index')->with('success', 'تم تعديل بيانات الأستاذ');
+    }
+
+    /**
+     * يضمن أن كود الأستاذ يبدأ بحرف T (كبير).
+     */
+    private function normalizeCode(?string $code): ?string
+    {
+        $code = trim((string) $code);
+        if ($code === '') {
+            return null;
+        }
+        // إن لم يبدأ بـ T (أو t) نضيفها في البداية
+        if (strtoupper($code[0]) !== 'T') {
+            return 'T' . $code;
+        }
+        // توحيد أول حرف ليكون T كبير
+        return 'T' . substr($code, 1);
     }
 
     public function destroy($id)
