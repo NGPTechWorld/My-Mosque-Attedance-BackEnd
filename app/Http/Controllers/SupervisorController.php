@@ -39,6 +39,9 @@ class SupervisorController extends Controller
         User::create([
             'name' => $data['name'],
             'username' => $data['username'],
+            // عمود email إلزامي وفريد في القاعدة، والدخول يتم باسم المستخدم،
+            // فنولّد بريداً مشتقاً من اسم المستخدم (فريد لأن اسم المستخدم فريد).
+            'email' => $this->emailFor($data['username']),
             'password' => Hash::make($data['password']),
             'role' => 'supervisor',
             'permissions' => $data['permissions'],
@@ -62,6 +65,7 @@ class SupervisorController extends Controller
 
         $user->name = $data['name'];
         $user->username = $data['username'];
+        $user->email = $this->emailFor($data['username']);
         $user->role = 'supervisor';
         $user->permissions = $data['permissions'];
         $user->shift_ids = $data['shift_ids'];
@@ -85,6 +89,15 @@ class SupervisorController extends Controller
         $user->delete();
 
         return back()->with('success', 'تم حذف المشرف بنجاح');
+    }
+
+    /**
+     * توليد بريد مشتق من اسم المستخدم (عمود email إلزامي وفريد في القاعدة).
+     * إضافة لاحقة ثابتة لاسم مستخدم فريد تُبقي البريد فريداً.
+     */
+    private function emailFor(string $username): string
+    {
+        return trim($username) . '@mosque.local';
     }
 
     /** التحقق من المدخلات (password مطلوبة عند الإنشاء فقط). */
