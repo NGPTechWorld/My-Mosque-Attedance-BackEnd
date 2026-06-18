@@ -24,16 +24,28 @@ class AttendanceController extends Controller
     ) {
     }
 
+    /** الفترات التي يحق للمستخدم الحالي عرضها (كلّها للمدير، المُسندة للمشرف). */
+    private function accessibleShifts()
+    {
+        $ids = auth()->user()->scopedShiftIds();
+        return $ids === null ? Shift::all() : Shift::whereIn('id', $ids)->get();
+    }
+
     public function monthlyReport(Request $request)
     {
         $shiftId = $request->input('shift_id');
         $month = $request->input('month', now()->format('Y-m')); // الشكل: 2025-06
 
-        $shifts = Shift::all();
+        $shifts = $this->accessibleShifts();
         $students = collect();
         $teachers = collect();
         $dates = [];
         $shiftDays = [];   // أيام دوام الفترة (0=الأحد..6=السبت)
+
+        // المشرف لا يستطيع طلب فترة غير مُسندة له
+        if ($shiftId && ! auth()->user()->canAccessShift($shiftId)) {
+            abort(403, 'ليس لديك صلاحية على هذه الفترة.');
+        }
 
         if ($shiftId) {
             $shift = Shift::find($shiftId);
@@ -63,22 +75,28 @@ class AttendanceController extends Controller
     {
         $date = $request->input('date', now()->next(Carbon::FRIDAY)->toDateString());
 
+        $shiftIds = auth()->user()->scopedShiftIds();
+
         $students = Student::with(['attendances' => function ($q) use ($date) {
             $q->where('date', $date);
-        }])->get();
+        }])->when($shiftIds !== null, fn ($q) => $q->whereIn('shift_id', $shiftIds))->get();
 
         $teachers = Teacher::with(['attendances' => function ($q) use ($date) {
             $q->where('date', $date);
-        }])->get();
+        }])->when($shiftIds !== null, fn ($q) => $q->whereIn('shift_id', $shiftIds))->get();
 
         return view('attendance.friday_report', compact('students', 'teachers', 'date'));
     }
 
     public function byShift(Request $request)
     {
-        $shifts = Shift::all();
+        $shifts = $this->accessibleShifts();
         $students = null;
         $teachers = null;
+
+        if ($request->shift_id && ! auth()->user()->canAccessShift($request->shift_id)) {
+            abort(403, 'ليس لديك صلاحية على هذه الفترة.');
+        }
 
         if ($request->shift_id && $request->date) {
             $students = Student::with(['attendances' => function ($q) use ($request) {

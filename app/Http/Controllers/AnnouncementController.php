@@ -20,7 +20,15 @@ class AnnouncementController extends Controller
 
     public function create()
     {
-        $shifts = Shift::withCount('students')->get();
+        $query = Shift::withCount('students');
+
+        // المشرف يرى فقط فتراته المُسندة
+        $shiftIds = auth()->user()->scopedShiftIds();
+        if ($shiftIds !== null) {
+            $query->whereIn('id', $shiftIds);
+        }
+
+        $shifts = $query->get();
         return view('announcements.create', compact('shifts'));
     }
 
@@ -34,6 +42,14 @@ class AnnouncementController extends Controller
         ], [
             'shift_ids.required' => 'الرجاء اختيار دوام واحد على الأقل.',
         ]);
+
+        // المشرف لا يستطيع الإرسال لفترة غير مُسندة له
+        $user = auth()->user();
+        foreach ($request->shift_ids as $shiftId) {
+            if (! $user->canAccessShift($shiftId)) {
+                abort(403, 'ليس لديك صلاحية على إحدى الفترات المختارة.');
+            }
+        }
 
         $students = Student::whereIn('shift_id', $request->shift_ids)->get();
 

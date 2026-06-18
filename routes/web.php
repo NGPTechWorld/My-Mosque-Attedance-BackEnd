@@ -10,6 +10,7 @@ use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\MonitoringController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\AnnouncementController;
+use App\Http\Controllers\SupervisorController;
 
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -17,7 +18,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'section'])->group(function () {
 Route::get('/', [DashboardController::class, 'index'])->middleware('auth')->name('dashboard');
 Route::get('/students', [StudentController::class, 'showDashboard'])->name('students.index');
 Route::post('/students/{id}/checkin', [StudentController::class, 'checkInWeb'])->name('students.checkin');
@@ -62,6 +63,14 @@ Route::post('/announcements/send', [AnnouncementController::class, 'send'])->nam
 // إعدادات نقاط الحضور
 Route::get('/settings/attendance-reward', [SettingsController::class, 'attendanceReward'])->name('settings.attendanceReward');
 Route::post('/settings/attendance-reward', [SettingsController::class, 'updateAttendanceReward'])->name('settings.attendanceReward.update');
+
+// إدارة المشرفين (للمدير العام فقط)
+Route::get('/supervisors', [SupervisorController::class, 'index'])->name('supervisors.index');
+Route::get('/supervisors/create', [SupervisorController::class, 'create'])->name('supervisors.create');
+Route::post('/supervisors', [SupervisorController::class, 'store'])->name('supervisors.store');
+Route::get('/supervisors/{user}/edit', [SupervisorController::class, 'edit'])->name('supervisors.edit');
+Route::put('/supervisors/{user}', [SupervisorController::class, 'update'])->name('supervisors.update');
+Route::delete('/supervisors/{user}', [SupervisorController::class, 'destroy'])->name('supervisors.destroy');
 });
 
 

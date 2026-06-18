@@ -20,50 +20,75 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                @php $u = auth()->user(); @endphp
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('dashboard') }}">الرئيسية</a>
                     </li>
 
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
-                            aria-expanded="false">
-                            إدارة الطلاب
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{{ route('students.index') }}">الطلاب</a></li>
-                            <li><a class="dropdown-item" href="{{ route('points.index') }}">النقاط</a></li>
-                            <li><a class="dropdown-item" href="{{ route('shifts.index') }}">الفترات</a></li>
-                        </ul>
-                    </li>
+                    @if ($u && ($u->hasSection('students') || $u->hasSection('points') || $u->hasSection('shifts')))
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                                aria-expanded="false">
+                                إدارة الطلاب
+                            </a>
+                            <ul class="dropdown-menu">
+                                @if ($u->hasSection('students'))
+                                    <li><a class="dropdown-item" href="{{ route('students.index') }}">الطلاب</a></li>
+                                @endif
+                                @if ($u->hasSection('points'))
+                                    <li><a class="dropdown-item" href="{{ route('points.index') }}">النقاط</a></li>
+                                @endif
+                                @if ($u->hasSection('shifts'))
+                                    <li><a class="dropdown-item" href="{{ route('shifts.index') }}">الفترات</a></li>
+                                @endif
+                            </ul>
+                        </li>
+                    @endif
 
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('teachers.index') }}">الأساتذة</a>
-                    </li>
+                    @if ($u && $u->hasSection('teachers'))
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('teachers.index') }}">الأساتذة</a>
+                        </li>
+                    @endif
 
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('monitoring.index') }}">متابعة النظام</a>
-                    </li>
+                    @if ($u && $u->hasSection('monitoring'))
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('monitoring.index') }}">متابعة النظام</a>
+                        </li>
+                    @endif
 
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('announcements.create') }}">إرسال إعلان</a>
-                    </li>
+                    @if ($u && $u->hasSection('announcements'))
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('announcements.create') }}">إرسال إعلان</a>
+                        </li>
+                    @endif
 
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('settings.attendanceReward') }}">نقاط الحضور</a>
-                    </li>
+                    @if ($u && $u->hasSection('attendance_points'))
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('settings.attendanceReward') }}">نقاط الحضور</a>
+                        </li>
+                    @endif
 
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
-                            aria-expanded="false">
-                            تقارير الدوام
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{{ route('attendance.byShift') }}">دوام حسب الفترة</a></li>
-                            <li><a class="dropdown-item" href="{{ route('attendance.monthlyReport') }}">تقرير شهري</a></li>
-                            <li><a class="dropdown-item" href="{{ route('attendance.friday') }}">تقرير الجمعة</a></li>
-                        </ul>
-                    </li>
+                    @if ($u && $u->hasSection('reports'))
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                                aria-expanded="false">
+                                تقارير الدوام
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{{ route('attendance.byShift') }}">دوام حسب الفترة</a></li>
+                                <li><a class="dropdown-item" href="{{ route('attendance.monthlyReport') }}">تقرير شهري</a></li>
+                                <li><a class="dropdown-item" href="{{ route('attendance.friday') }}">تقرير الجمعة</a></li>
+                            </ul>
+                        </li>
+                    @endif
+
+                    @if ($u && $u->isAdmin())
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('supervisors.index') }}">إدارة المشرفين</a>
+                        </li>
+                    @endif
                 </ul>
 
                 <form action="{{ route('logout') }}" method="POST" class="d-flex">

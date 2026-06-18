@@ -146,7 +146,15 @@ class StudentController extends Controller
 
     public function showDashboard()
     {
-        $students = Student::with('shift')->get();
+        $query = Student::with('shift');
+
+        // المشرف يرى فقط طلاب الفترات المُسندة له
+        $shiftIds = auth()->user()->scopedShiftIds();
+        if ($shiftIds !== null) {
+            $query->whereIn('shift_id', $shiftIds);
+        }
+
+        $students = $query->get();
         return view('students.index', compact('students'));
     }
 
@@ -156,6 +164,12 @@ class StudentController extends Controller
 
         if ($request->has('search') && $request->search != '') {
             $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        // المشرف يرى فقط طلاب الفترات المُسندة له
+        $shiftIds = auth()->user()->scopedShiftIds();
+        if ($shiftIds !== null) {
+            $query->whereIn('shift_id', $shiftIds);
         }
 
         $students = $query->get();
