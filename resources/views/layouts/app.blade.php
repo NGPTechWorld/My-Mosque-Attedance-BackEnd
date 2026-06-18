@@ -46,6 +46,10 @@
                     </li>
 
                     <li class="nav-item">
+                        <a class="nav-link" href="{{ route('announcements.create') }}">إرسال إعلان</a>
+                    </li>
+
+                    <li class="nav-item">
                         <a class="nav-link" href="{{ route('settings.attendanceReward') }}">نقاط الحضور</a>
                     </li>
 

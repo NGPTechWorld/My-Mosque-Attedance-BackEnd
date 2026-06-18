@@ -9,6 +9,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\MonitoringController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\AnnouncementController;
 
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -53,6 +54,10 @@ Route::post('/teachers/{id}/checkin', [TeacherController::class, 'checkInWeb'])-
 
 // متابعة النظام (تفاعل تطبيق الأهل)
 Route::get('/monitoring', [MonitoringController::class, 'index'])->name('monitoring.index');
+
+// إرسال إعلان/إشعار لأهالي دوام مختار
+Route::get('/announcements', [AnnouncementController::class, 'create'])->name('announcements.create');
+Route::post('/announcements/send', [AnnouncementController::class, 'send'])->name('announcements.send');
 
 // إعدادات نقاط الحضور
 Route::get('/settings/attendance-reward', [SettingsController::class, 'attendanceReward'])->name('settings.attendanceReward');
