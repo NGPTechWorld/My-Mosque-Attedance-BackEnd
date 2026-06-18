@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Student;
 use App\Models\DeviceToken;
 use App\Models\ParentNotification;
+use App\Models\ParentActivity;
 use Illuminate\Http\Request;
 
 /**
@@ -46,6 +47,15 @@ class ParentController extends Controller
             $this->saveDevice($request->fcm_token, $request->phone, $request->platform);
         }
 
+        ParentActivity::log(
+            $request->phone,
+            'login',
+            "دخول/إضافة الطالب: {$student->name}",
+            $student->id,
+            $student->name,
+            $request->platform,
+        );
+
         return response()->json([
             'success' => true,
             'student' => $this->studentPayload($student),
@@ -61,12 +71,17 @@ class ParentController extends Controller
 
         $students = Student::with('shift')
             ->where('guardian_phone', $request->phone)
-            ->get()
-            ->map(fn ($s) => $this->studentPayload($s));
+            ->get();
+
+        ParentActivity::log(
+            $request->phone,
+            'open_app',
+            'فتح التطبيق (' . $students->count() . ' طالب)',
+        );
 
         return response()->json([
             'success' => true,
-            'students' => $students,
+            'students' => $students->map(fn ($s) => $this->studentPayload($s)),
         ]);
     }
 
@@ -97,6 +112,14 @@ class ParentController extends Controller
         }
 
         $notifications = $student->notifications()->limit(100)->get();
+
+        ParentActivity::log(
+            $request->phone,
+            'view_notifications',
+            "عرض إشعارات الطالب: {$student->name}",
+            $student->id,
+            $student->name,
+        );
 
         return response()->json([
             'success' => true,
@@ -157,6 +180,14 @@ class ParentController extends Controller
 
         $transactions = $student->pointTransactions()->limit(100)->get();
 
+        ParentActivity::log(
+            $request->phone,
+            'view_points',
+            "عرض نقاط الطالب: {$student->name}",
+            $student->id,
+            $student->name,
+        );
+
         return response()->json([
             'success' => true,
             'balance' => $student->points,
@@ -176,6 +207,15 @@ class ParentController extends Controller
         ]);
 
         $this->saveDevice($request->fcm_token, $request->phone, $request->platform);
+
+        ParentActivity::log(
+            $request->phone,
+            'device',
+            'تسجيل/تحديث جهاز للإشعارات',
+            null,
+            null,
+            $request->platform,
+        );
 
         return response()->json(['success' => true]);
     }

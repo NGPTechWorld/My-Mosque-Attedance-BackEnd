@@ -38,6 +38,26 @@ class Student extends Model
     }
 
     /**
+     * تعديل نقاط الطالب وتسجيل العملية في المحفظة.
+     *
+     * @param  int  $amount  موجب للإضافة، سالب للحذف
+     * @param  string|null  $reason  السبب (يظهر في محفظة الأهل)
+     */
+    public function addPoints(int $amount, ?string $reason = null): PointTransaction
+    {
+        $this->points += $amount;
+        $this->save();
+
+        return PointTransaction::create([
+            'student_id' => $this->id,
+            'type' => $amount >= 0 ? 'add' : 'remove',
+            'amount' => abs($amount),
+            'reason' => $reason,
+            'balance_after' => $this->points,
+        ]);
+    }
+
+    /**
      * إيجاد الطالب عبر الكود اليدوي (المستخدم في الـ QR) أو الـ id الرقمي.
      */
     public static function resolveByCodeOrId($value): ?Student

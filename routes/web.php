@@ -7,6 +7,8 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\TeacherController;
+use App\Http\Controllers\MonitoringController;
+use App\Http\Controllers\SettingsController;
 
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -48,6 +50,13 @@ Route::get('/teachers/{id}/edit', [TeacherController::class, 'edit'])->name('tea
 Route::put('/teachers/{id}', [TeacherController::class, 'update'])->name('teachers.update');
 Route::delete('/teachers/{id}', [TeacherController::class, 'destroy'])->name('teachers.destroy');
 Route::post('/teachers/{id}/checkin', [TeacherController::class, 'checkInWeb'])->name('teachers.checkin');
+
+// متابعة النظام (تفاعل تطبيق الأهل)
+Route::get('/monitoring', [MonitoringController::class, 'index'])->name('monitoring.index');
+
+// إعدادات نقاط الحضور
+Route::get('/settings/attendance-reward', [SettingsController::class, 'attendanceReward'])->name('settings.attendanceReward');
+Route::post('/settings/attendance-reward', [SettingsController::class, 'updateAttendanceReward'])->name('settings.attendanceReward.update');
 });
 
 

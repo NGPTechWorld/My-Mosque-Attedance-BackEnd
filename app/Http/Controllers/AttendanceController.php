@@ -7,6 +7,7 @@ use App\Models\Attendance;
 use App\Models\Teacher;
 use App\Models\TeacherAttendance;
 use App\Services\AttendanceNotifier;
+use App\Services\AttendanceRewardService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
@@ -17,8 +18,10 @@ use Illuminate\Validation\ValidationException;
 
 class AttendanceController extends Controller
 {
-    public function __construct(private AttendanceNotifier $notifier)
-    {
+    public function __construct(
+        private AttendanceNotifier $notifier,
+        private AttendanceRewardService $reward,
+    ) {
     }
 
     public function monthlyReport(Request $request)
@@ -201,6 +204,9 @@ class AttendanceController extends Controller
                 'date' => $today->toDateString(),
                 'check_in_time' => $currentTime,
             ]);
+
+            // منح نقاط الحضور التلقائية (حسب إعدادات الأدمن)
+            $this->reward->award($student);
 
             // إنشاء سجل إشعار + إرسال إشعار Firebase لتطبيق الأهل
             $this->notifier->notify($student, $today);
