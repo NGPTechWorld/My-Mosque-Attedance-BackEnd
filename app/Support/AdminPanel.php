@@ -9,7 +9,10 @@ class AdminPanel
 {
     /** الأقسام القابلة للمنح للمشرفين (المفتاح => التسمية). */
     public const SECTIONS = [
-        'students' => 'الطلاب',
+        'students' => 'الطلاب (عرض + حضور/غياب)',
+        'students_create' => 'إضافة طلاب',
+        'students_edit' => 'تعديل طلاب',
+        'students_delete' => 'حذف الطلاب',
         'points' => 'النقاط',
         'shifts' => 'الفترات',
         'teachers' => 'الأساتذة',
@@ -24,16 +27,18 @@ class AdminPanel
 
     /** ربط اسم المسار (route name) بالقسم المطلوب صلاحيته. */
     public const ROUTE_PERMISSIONS = [
-        // الطلاب
+        // الطلاب — عرض وعمليات يومية
         'students.index' => 'students',
-        'students.create' => 'students',
-        'students.store' => 'students',
         'students.show' => 'students',
-        'students.edit' => 'students',
-        'students.update' => 'students',
-        'students.destroy' => 'students',
-        'students.checkin' => 'students',
         'students.qr' => 'students',
+        'students.checkin' => 'students',
+        'students.absent' => 'students',
+        // إضافة/تعديل/حذف — صلاحيات منفصلة
+        'students.create' => 'students_create',
+        'students.store' => 'students_create',
+        'students.edit' => 'students_edit',
+        'students.update' => 'students_edit',
+        'students.destroy' => 'students_delete',
         // النقاط
         'points.index' => 'points',
         'students.updatePoints' => 'points',

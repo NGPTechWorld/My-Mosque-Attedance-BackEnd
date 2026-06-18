@@ -3,7 +3,38 @@
 @section('content')
     <h2>قائمة الطلاب</h2>
     <br>
-    <a href="{{ route('students.create') }}" class="btn btn-success mb-3">إضافة طالب</a>
+
+    @if (session('success'))
+        <div class="alert alert-success">✅ {{ session('success') }}</div>
+    @endif
+    @if (session('error'))
+        <div class="alert alert-danger">❌ {{ session('error') }}</div>
+    @endif
+
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+        @if (auth()->user()->hasSection('students_create'))
+            <a href="{{ route('students.create') }}" class="btn btn-success">إضافة طالب</a>
+        @else
+            <span></span>
+        @endif
+
+        {{-- فلتر حسب الفترة --}}
+        <form method="GET" class="d-flex gap-2 align-items-center">
+            <label for="shift_id" class="form-label m-0">الفترة:</label>
+            <select name="shift_id" id="shift_id" class="form-select" onchange="this.form.submit()">
+                <option value="">كل الفترات</option>
+                @foreach ($shifts as $shift)
+                    <option value="{{ $shift->id }}" @selected((string) ($selectedShift ?? '') === (string) $shift->id)>
+                        {{ $shift->name }}
+                    </option>
+                @endforeach
+            </select>
+            @if (!empty($selectedShift))
+                <a href="{{ route('students.index') }}" class="btn btn-outline-secondary">إلغاء</a>
+            @endif
+        </form>
+    </div>
+
     <table class="table table-bordered table-striped">
         <thead>
             <tr>
@@ -32,16 +63,27 @@
                             <button class="btn btn-success btn-sm">تسجيل حضور</button>
                         </form>
 
+                        <form method="POST" action="{{ route('students.absent', $student->id) }}"
+                            style="display:inline-block;"
+                            onsubmit="return confirm('تأكيد تسجيل غياب الطالب وإرسال إشعار لأهله؟');">
+                            @csrf
+                            <button class="btn btn-secondary btn-sm">تسجيل غياب</button>
+                        </form>
+
                         <a href="{{ route('students.qr', $student->id) }}" class="btn btn-info btn-sm" target="_blank">QR</a>
 
-                        <a href="{{ route('students.edit', $student->id) }}" class="btn btn-warning btn-sm">تعديل</a>
+                        @if (auth()->user()->hasSection('students_edit'))
+                            <a href="{{ route('students.edit', $student->id) }}" class="btn btn-warning btn-sm">تعديل</a>
+                        @endif
 
-                        <form method="POST" action="{{ route('students.destroy', $student->id) }}" style="display:inline-block;"
-                            onsubmit="return confirm('هل أنت متأكد من حذف الطالب؟');">
-                            @csrf
-                            @method('DELETE')
-                            <button class="btn btn-danger btn-sm">حذف</button>
-                        </form>
+                        @if (auth()->user()->hasSection('students_delete'))
+                            <form method="POST" action="{{ route('students.destroy', $student->id) }}" style="display:inline-block;"
+                                onsubmit="return confirm('هل أنت متأكد من حذف الطالب؟');">
+                                @csrf
+                                @method('DELETE')
+                                <button class="btn btn-danger btn-sm">حذف</button>
+                            </form>
+                        @endif
                     </td>
 
                 </tr>

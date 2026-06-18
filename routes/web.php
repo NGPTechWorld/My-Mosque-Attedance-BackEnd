@@ -22,6 +22,7 @@ Route::middleware(['auth', 'section'])->group(function () {
 Route::get('/', [DashboardController::class, 'index'])->middleware('auth')->name('dashboard');
 Route::get('/students', [StudentController::class, 'showDashboard'])->name('students.index');
 Route::post('/students/{id}/checkin', [StudentController::class, 'checkInWeb'])->name('students.checkin');
+Route::post('/students/{id}/absent', [StudentController::class, 'markAbsent'])->name('students.absent');
 Route::delete('/students/{student}', [StudentController::class, 'destroy'])->name('students.destroy');
 
 Route::get('/points', [StudentController::class, 'showPoints'])->name('points.index');

@@ -144,18 +144,33 @@ class StudentController extends Controller
         $student->addPoints($change, $reason);
     }
 
-    public function showDashboard()
+    public function showDashboard(Request $request)
     {
+        $user = auth()->user();
+        $shiftIds = $user->scopedShiftIds();
+
+        // الفترات المتاحة للفلترة (المشرف: فتراته فقط)
+        $shiftsQuery = Shift::query();
+        if ($shiftIds !== null) {
+            $shiftsQuery->whereIn('id', $shiftIds);
+        }
+        $shifts = $shiftsQuery->get();
+
         $query = Student::with('shift');
 
         // المشرف يرى فقط طلاب الفترات المُسندة له
-        $shiftIds = auth()->user()->scopedShiftIds();
         if ($shiftIds !== null) {
             $query->whereIn('shift_id', $shiftIds);
         }
 
+        // فلتر حسب الفترة المختارة (ضمن المسموح)
+        $selectedShift = $request->input('shift_id');
+        if ($selectedShift && $user->canAccessShift($selectedShift)) {
+            $query->where('shift_id', $selectedShift);
+        }
+
         $students = $query->get();
-        return view('students.index', compact('students'));
+        return view('students.index', compact('students', 'shifts', 'selectedShift'));
     }
 
     public function showPoints(Request $request)
@@ -204,6 +219,31 @@ class StudentController extends Controller
         $this->notifier->notify($student, $today);
 
         return back()->with('success', 'تم تسجيل الحضور بنجاح');
+    }
+
+    /**
+     * تسجيل غياب الطالب وإرسال إشعار لأهله.
+     */
+    public function markAbsent($id)
+    {
+        $student = Student::findOrFail($id);
+
+        // المشرف لا يسجّل غياب طالب خارج فتراته
+        if (! auth()->user()->canAccessShift($student->shift_id)) {
+            return back()->with('error', 'ليس لديك صلاحية على فترة هذا الطالب.');
+        }
+
+        // إن كان الطالب قد سجّل حضوره اليوم لا نسجّله غائباً
+        $already = Attendance::where('student_id', $id)
+            ->where('date', now()->toDateString())
+            ->exists();
+        if ($already) {
+            return back()->with('error', 'الطالب سجّل حضوره اليوم، لا يمكن تسجيله غائباً.');
+        }
+
+        $this->notifier->notifyAbsence($student, now());
+
+        return back()->with('success', 'تم تسجيل غياب الطالب وإرسال إشعار لأهله.');
     }
    public function edit($id)
 {

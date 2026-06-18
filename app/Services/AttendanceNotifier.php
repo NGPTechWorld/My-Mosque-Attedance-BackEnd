@@ -67,4 +67,43 @@ class AttendanceNotifier
             Log::error('Failed to send FCM attendance notification: ' . $e->getMessage());
         }
     }
+
+    /**
+     * إشعار غياب الطالب: يُحفظ في السجل ويُرسل عبر Firebase.
+     */
+    public function notifyAbsence(Student $student, Carbon $date): void
+    {
+        $dayName = self::DAYS_AR[$date->dayOfWeek] ?? '';
+
+        $title = 'تسجيل غياب';
+        $body = "نفيدكم بغياب الطالب {$student->name} يوم {$dayName} بتاريخ {$date->toDateString()}";
+
+        $data = [
+            'type' => 'absence',
+            'student_id' => $student->id,
+            'date' => $date->toDateString(),
+            'day' => $dayName,
+        ];
+
+        // 1) حفظ الإشعار في السجل (يظهر داخل التطبيق)
+        try {
+            ParentNotification::create([
+                'student_id' => $student->id,
+                'guardian_phone' => $student->guardian_phone,
+                'type' => 'absence',
+                'title' => $title,
+                'body' => $body,
+                'data' => $data,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to store absence notification: ' . $e->getMessage());
+        }
+
+        // 2) إرسال إشعار Firebase لأجهزة الأهل
+        try {
+            $this->fcm->sendToGuardian($student->guardian_phone, $title, $body, $data);
+        } catch (\Throwable $e) {
+            Log::error('Failed to send FCM absence notification: ' . $e->getMessage());
+        }
+    }
 }
