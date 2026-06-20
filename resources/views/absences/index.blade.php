@@ -76,8 +76,8 @@
                         <div class="col-md-4">
                             <label class="form-label fw-bold">نوع الغياب</label>
                             <select name="type" class="form-select" required>
-                                <option value="unexcused">غير مبرّر (بدون خصم)</option>
-                                <option value="excused">مبرّر (يُخصم نقاط)</option>
+                                <option value="unexcused">غير مبرّر (يُخصم نقاط)</option>
+                                <option value="excused">مبرّر (بدون خصم)</option>
                             </select>
                         </div>
                         <div class="col-md-4">
@@ -88,9 +88,9 @@
                         </div>
                     </div>
                     <small class="text-muted mt-2">
-                        الغياب المبرّر يُخصم منه عدد النقاط المحدّد في
+                        الغياب غير المبرّر يُخصم منه عدد النقاط المحدّد في
                         <a href="{{ route('settings.attendanceReward') }}">إعدادات النقاط</a>،
-                        أما غير المبرّر فلا يُخصم. ويُرسل إشعار للأهل في الحالتين.
+                        أما المبرّر فلا يُخصم. ويُرسل إشعار للأهل في الحالتين.
                     </small>
                 </div>
             </form>

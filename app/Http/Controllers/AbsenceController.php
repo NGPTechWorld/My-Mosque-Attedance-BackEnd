@@ -99,8 +99,8 @@ class AbsenceController extends Controller
 
             // الخصم والإشعار يتمّان عند أول تسجيل فقط
             if ($isNew) {
-                // الغياب المبرّر فقط يُخصم منه نقاط
-                if ($type === 'excused') {
+                // الغياب غير المبرّر فقط يُخصم منه نقاط
+                if ($type === 'unexcused') {
                     $this->reward->applyAbsence($student);
                 }
                 $this->notifier->notifyAbsence($student, Carbon::parse($date), $type);
