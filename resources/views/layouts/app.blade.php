@@ -46,6 +46,12 @@
                         </li>
                     @endif
 
+                    @if ($u && $u->hasSection('absences'))
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('absences.index') }}">تسجيل الغياب</a>
+                        </li>
+                    @endif
+
                     @if ($u && $u->hasSection('teachers'))
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('teachers.index') }}">الأساتذة</a>

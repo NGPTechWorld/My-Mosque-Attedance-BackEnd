@@ -70,16 +70,25 @@ class AttendanceNotifier
 
     /**
      * إشعار غياب الطالب: يُحفظ في السجل ويُرسل عبر Firebase.
+     *
+     * @param  string|null  $absenceType  excused | unexcused | null
      */
-    public function notifyAbsence(Student $student, Carbon $date): void
+    public function notifyAbsence(Student $student, Carbon $date, ?string $absenceType = null): void
     {
         $dayName = self::DAYS_AR[$date->dayOfWeek] ?? '';
 
+        $typeLabel = match ($absenceType) {
+            'excused' => ' (غياب مبرّر)',
+            'unexcused' => ' (غياب غير مبرّر)',
+            default => '',
+        };
+
         $title = 'تسجيل غياب';
-        $body = "نفيدكم بغياب الطالب {$student->name} يوم {$dayName} بتاريخ {$date->toDateString()}";
+        $body = "نفيدكم بغياب الطالب {$student->name} يوم {$dayName} بتاريخ {$date->toDateString()}{$typeLabel}";
 
         $data = [
             'type' => 'absence',
+            'absence_type' => $absenceType ?? '',
             'student_id' => $student->id,
             'date' => $date->toDateString(),
             'day' => $dayName,

@@ -172,8 +172,18 @@ class StudentController extends Controller
             $query->where('shift_id', $selectedShift);
         }
 
+        // بحث بالاسم أو الكود أو الهاتف
+        $search = trim((string) $request->input('search'));
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('code', 'like', "%{$search}%")
+                  ->orWhere('guardian_phone', 'like', "%{$search}%");
+            });
+        }
+
         $students = $query->get();
-        return view('students.index', compact('students', 'shifts', 'selectedShift'));
+        return view('students.index', compact('students', 'shifts', 'selectedShift', 'search'));
     }
 
     public function showPoints(Request $request)

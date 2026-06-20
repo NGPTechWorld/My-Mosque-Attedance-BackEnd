@@ -107,6 +107,14 @@ class AttendanceController extends Controller
             $teachers = Teacher::with(['attendances' => function ($q) use ($request) {
                 $q->where('date', $request->date);
             }])->where('shift_id', $request->shift_id)->get();
+
+            // فلترة الطلاب حسب الحضور/الغياب
+            $status = $request->input('status');
+            if ($status === 'present') {
+                $students = $students->filter(fn ($s) => $s->attendances->isNotEmpty())->values();
+            } elseif ($status === 'absent') {
+                $students = $students->filter(fn ($s) => $s->attendances->isEmpty())->values();
+            }
         }
 
         return view('attendance.by_shift', compact('shifts', 'students', 'teachers'));

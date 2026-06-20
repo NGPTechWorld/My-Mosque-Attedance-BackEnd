@@ -18,10 +18,12 @@
             <span></span>
         @endif
 
-        {{-- فلتر حسب الفترة --}}
-        <form method="GET" class="d-flex gap-2 align-items-center">
+        {{-- بحث + فلتر حسب الفترة --}}
+        <form method="GET" class="d-flex flex-wrap gap-2 align-items-center">
+            <input type="search" name="search" value="{{ $search ?? '' }}" class="form-control"
+                placeholder="بحث بالاسم أو الكود أو الهاتف..." style="min-width: 240px;">
             <label for="shift_id" class="form-label m-0">الفترة:</label>
-            <select name="shift_id" id="shift_id" class="form-select" onchange="this.form.submit()">
+            <select name="shift_id" id="shift_id" class="form-select" style="width:auto;" onchange="this.form.submit()">
                 <option value="">كل الفترات</option>
                 @foreach ($shifts as $shift)
                     <option value="{{ $shift->id }}" @selected((string) ($selectedShift ?? '') === (string) $shift->id)>
@@ -29,7 +31,8 @@
                     </option>
                 @endforeach
             </select>
-            @if (!empty($selectedShift))
+            <button class="btn btn-primary">بحث</button>
+            @if (!empty($selectedShift) || !empty($search))
                 <a href="{{ route('students.index') }}" class="btn btn-outline-secondary">إلغاء</a>
             @endif
         </form>

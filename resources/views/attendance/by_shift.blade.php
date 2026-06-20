@@ -16,6 +16,13 @@
                 <input type="date" name="date" class="form-control" value="{{ request('date', now()->toDateString()) }}">
             </div>
             <div class="col">
+                <select name="status" class="form-control">
+                    <option value="" {{ request('status') === '' || request('status') === null ? 'selected' : '' }}>الكل</option>
+                    <option value="present" {{ request('status') === 'present' ? 'selected' : '' }}>الحاضرون فقط</option>
+                    <option value="absent" {{ request('status') === 'absent' ? 'selected' : '' }}>الغائبون فقط</option>
+                </select>
+            </div>
+            <div class="col">
                 <button class="btn btn-primary">عرض</button>
             </div>
         </div>

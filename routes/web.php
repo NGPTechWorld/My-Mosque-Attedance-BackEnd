@@ -11,6 +11,7 @@ use App\Http\Controllers\MonitoringController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\SupervisorController;
+use App\Http\Controllers\AbsenceController;
 
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -23,6 +24,10 @@ Route::get('/', [DashboardController::class, 'index'])->middleware('auth')->name
 Route::get('/students', [StudentController::class, 'showDashboard'])->name('students.index');
 Route::post('/students/{id}/checkin', [StudentController::class, 'checkInWeb'])->name('students.checkin');
 Route::post('/students/{id}/absent', [StudentController::class, 'markAbsent'])->name('students.absent');
+
+// قسم تسجيل الغياب (حسب الفترة، مبرّر/غير مبرّر، متعدّد)
+Route::get('/absences', [AbsenceController::class, 'index'])->name('absences.index');
+Route::post('/absences', [AbsenceController::class, 'store'])->name('absences.store');
 Route::delete('/students/{student}', [StudentController::class, 'destroy'])->name('students.destroy');
 
 Route::get('/points', [StudentController::class, 'showPoints'])->name('points.index');

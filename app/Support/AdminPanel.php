@@ -13,6 +13,7 @@ class AdminPanel
         'students_create' => 'إضافة طلاب',
         'students_edit' => 'تعديل طلاب',
         'students_delete' => 'حذف الطلاب',
+        'absences' => 'تسجيل الغياب',
         'points' => 'النقاط',
         'shifts' => 'الفترات',
         'teachers' => 'الأساتذة',
@@ -23,7 +24,7 @@ class AdminPanel
     ];
 
     /** الأقسام التي تُقيَّد بالفترات المُسندة للمشرف. */
-    public const SHIFT_SCOPED = ['students', 'points', 'reports', 'announcements'];
+    public const SHIFT_SCOPED = ['students', 'points', 'reports', 'announcements', 'absences'];
 
     /** ربط اسم المسار (route name) بالقسم المطلوب صلاحيته. */
     public const ROUTE_PERMISSIONS = [
@@ -33,6 +34,9 @@ class AdminPanel
         'students.qr' => 'students',
         'students.checkin' => 'students',
         'students.absent' => 'students',
+        // تسجيل الغياب (قسم منفصل)
+        'absences.index' => 'absences',
+        'absences.store' => 'absences',
         // إضافة/تعديل/حذف — صلاحيات منفصلة
         'students.create' => 'students_create',
         'students.store' => 'students_create',
