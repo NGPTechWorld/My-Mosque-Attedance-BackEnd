@@ -13,6 +13,11 @@
         </div>
     @endif
     <div class="mb-3">
+        <label>المعرّف (ID):</label>
+        <input type="number" name="id" class="form-control" value="{{ old('id', $defaultId) }}" min="1" required>
+        <small class="text-muted">قيمة افتراضية = الرقم التالي المتاح، يمكنك تغييرها.</small>
+    </div>
+    <div class="mb-3">
         <label>كود الطالب (يُستخدم في الـ QR):</label>
         <input name="code" class="form-control" value="{{ old('code') }}" required>
     </div>

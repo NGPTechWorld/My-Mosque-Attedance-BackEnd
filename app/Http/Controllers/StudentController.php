@@ -36,13 +36,16 @@ class StudentController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'id' => 'required|integer|min:1|unique:students,id',
             'code' => 'required|string|unique:students,code',
             'name' => 'required',
             'guardian_phone' => 'required',
             'shift_id' => 'required|exists:shifts,id',
         ]);
 
-        Student::create($request->only(['code', 'name', 'guardian_phone', 'shift_id']));
+        $student = new Student($request->only(['code', 'name', 'guardian_phone', 'shift_id']));
+        $student->id = (int) $request->id;   // معرّف يدوي (افتراضياً الرقم التالي)
+        $student->save();
 
         // نرجع للصفحة الرئيسية (مثلاً: students.index) مع رسالة نجاح
         return redirect()->route('students.index')->with('success', 'تم إضافة الطالب بنجاح');
@@ -278,7 +281,9 @@ class StudentController extends Controller
     public function create()
     {
         $shifts = Shift::all();
-        return view('students.create', compact('shifts'));
+        // قيمة افتراضية للمعرّف = الرقم التالي المتاح (قابلة للتعديل)
+        $defaultId = (int) (Student::max('id') ?? 0) + 1;
+        return view('students.create', compact('shifts', 'defaultId'));
     }
 
     public function show($id)
