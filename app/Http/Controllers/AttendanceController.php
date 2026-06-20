@@ -223,8 +223,8 @@ class AttendanceController extends Controller
                 'check_in_time' => $currentTime,
             ]);
 
-            // منح نقاط الحضور التلقائية (حسب إعدادات الأدمن)
-            $this->reward->award($student);
+            // نقاط الحضور أو خصم التأخير تلقائياً (حسب إعدادات الأدمن ووقت الحضور)
+            $this->reward->applyCheckIn($student, $today);
 
             // إنشاء سجل إشعار + إرسال إشعار Firebase لتطبيق الأهل
             $this->notifier->notify($student, $today);

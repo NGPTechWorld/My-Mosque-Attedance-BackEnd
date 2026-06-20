@@ -16,6 +16,9 @@
             <input name="end_time" type="time" class="form-control" required>
         </div>
         <div class="col">
+            <input name="late_time" type="time" class="form-control" title="وقت التأخير" placeholder="وقت التأخير">
+        </div>
+        <div class="col">
             <select name="days[]" multiple class="form-control" required>
                 <option value="0">الأحد</option>
                 <option value="1">الاثنين</option>
@@ -33,12 +36,13 @@
 </form>
 
 <table class="table table-bordered">
-    <thead><tr><th>الاسم</th><th>الوقت</th><th>الأيام</th><th>حذف</th></tr></thead>
+    <thead><tr><th>الاسم</th><th>الوقت</th><th>وقت التأخير</th><th>الأيام</th><th>حذف</th></tr></thead>
     <tbody>
         @foreach ($shifts as $shift)
         <tr>
             <td>{{ $shift->name }}</td>
             <td>{{ $shift->start_time }} - {{ $shift->end_time }}</td>
+            <td>{{ $shift->late_time ? substr($shift->late_time, 0, 5) : '—' }}</td>
             <td>
                 @foreach ($shift->days as $day)
                     <span class="badge bg-primary">{{ ["أحد","اثنين","ثلاثاء","أربعاء","خميس","جمعة","سبت"][$day] }}</span>

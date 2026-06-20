@@ -216,7 +216,7 @@ class StudentController extends Controller
         ]);
 
         // منح نقاط الحضور التلقائية (حسب إعدادات الأدمن)
-        $this->reward->award($student);
+        $this->reward->applyCheckIn($student, $today);
 
         // إرسال إشعار Firebase + حفظه في سجل الإشعارات لتطبيق الأهل
         $this->notifier->notify($student, $today);
@@ -243,6 +243,9 @@ class StudentController extends Controller
         if ($already) {
             return back()->with('error', 'الطالب سجّل حضوره اليوم، لا يمكن تسجيله غائباً.');
         }
+
+        // خصم نقاط الغياب تلقائياً (حسب إعدادات الأدمن)
+        $this->reward->applyAbsence($student);
 
         $this->notifier->notifyAbsence($student, now());
 

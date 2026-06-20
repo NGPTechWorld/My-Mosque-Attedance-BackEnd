@@ -19,6 +19,7 @@ class ShiftController extends Controller
             'name' => 'required',
             'start_time' => 'required',
             'end_time' => 'required',
+            'late_time' => 'nullable|date_format:H:i',
             'days' => 'required|array',
         ]);
         Shift::create($data);
