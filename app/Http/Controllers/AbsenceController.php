@@ -55,6 +55,12 @@ class AbsenceController extends Controller
                 }
                 return $s;
             });
+
+            // ترتيب: غير المسجّلين فوق، ثم المسجّلون غياباً، ثم الحاضرون تحت (وبالاسم داخل كل مجموعة)
+            $rank = ['none' => 0, 'unexcused' => 1, 'excused' => 1, 'present' => 2];
+            $students = $students
+                ->sortBy(fn ($s) => sprintf('%d-%s', $rank[$s->status] ?? 1, $s->name))
+                ->values();
         }
 
         return view('absences.index', compact('shifts', 'selectedShift', 'date', 'students'));
