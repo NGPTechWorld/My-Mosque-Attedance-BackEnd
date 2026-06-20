@@ -25,6 +25,12 @@ class Student extends Model
         return $this->hasMany(Attendance::class);
     }
 
+    // العلاقة مع جدول الغياب (مبرّر/غير مبرّر)
+    public function absences()
+    {
+        return $this->hasMany(Absence::class);
+    }
+
     // سجل عمليات النقاط (المحفظة)
     public function pointTransactions()
     {

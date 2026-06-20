@@ -24,6 +24,13 @@
 
     @if($shiftId)
         <p class="text-muted">الأيام التي لا دوام فيها ضمن الفترة تظهر بعلامة «—» (لا تُحتسب غياباً).</p>
+        <p class="small">
+            <span class="me-3">✅ حاضر</span>
+            <span class="me-3"><span class="text-warning fw-bold">م</span> غياب مبرّر</span>
+            <span class="me-3"><span class="text-danger fw-bold">غ</span> غياب غير مبرّر</span>
+            <span class="me-3">❌ غائب (لم يُسجّل)</span>
+            <span>— لا دوام</span>
+        </p>
 
         {{-- ===== جدول الطلاب ===== --}}
         <div class="d-flex justify-content-between align-items-center mb-2">
@@ -47,13 +54,19 @@
                             @foreach($dates as $date)
                                 @php
                                     $isWork = in_array($date->dayOfWeek, $shiftDays);
-                                    $attended = $isWork ? $student->attendances->firstWhere('date', $date->toDateString()) : null;
+                                    $dateStr = $date->toDateString();
+                                    $attended = $isWork ? $student->attendances->firstWhere('date', $dateStr) : null;
+                                    $absence = ($isWork && !$attended) ? $student->absences->firstWhere('date', $dateStr) : null;
                                 @endphp
                                 <td class="text-center">
                                     @if(!$isWork)
                                         <span class="text-muted">—</span>
                                     @elseif($attended)
                                         ✅
+                                    @elseif($absence && $absence->type === 'excused')
+                                        <span class="text-warning fw-bold" title="غياب مبرّر">م</span>
+                                    @elseif($absence)
+                                        <span class="text-danger fw-bold" title="غياب غير مبرّر">غ</span>
                                     @else
                                         ❌
                                     @endif
@@ -127,6 +140,8 @@
                     let text = col.innerText.trim();
                     if (text === '✅') text = 'حاضر';
                     if (text === '❌') text = 'غائب';
+                    if (text === 'م') text = 'مبرّر';
+                    if (text === 'غ') text = 'غير مبرّر';
                     text = `"${text.replace(/"/g, '""')}"`;
                     row.push(text);
                 });

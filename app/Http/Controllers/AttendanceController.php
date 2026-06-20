@@ -51,9 +51,10 @@ class AttendanceController extends Controller
             $shift = Shift::find($shiftId);
             $shiftDays = $shift->days ?? [];
 
-            $students = Student::with(['attendances' => function ($q) use ($month) {
-                $q->where('date', 'like', $month . '%');
-            }])->where('shift_id', $shiftId)->get();
+            $students = Student::with([
+                'attendances' => fn ($q) => $q->where('date', 'like', $month . '%'),
+                'absences' => fn ($q) => $q->where('date', 'like', $month . '%'),
+            ])->where('shift_id', $shiftId)->get();
 
             $teachers = Teacher::with(['attendances' => function ($q) use ($month) {
                 $q->where('date', 'like', $month . '%');
@@ -77,9 +78,10 @@ class AttendanceController extends Controller
 
         $shiftIds = auth()->user()->scopedShiftIds();
 
-        $students = Student::with(['attendances' => function ($q) use ($date) {
-            $q->where('date', $date);
-        }])->when($shiftIds !== null, fn ($q) => $q->whereIn('shift_id', $shiftIds))->get();
+        $students = Student::with([
+            'attendances' => fn ($q) => $q->where('date', $date),
+            'absences' => fn ($q) => $q->where('date', $date),
+        ])->when($shiftIds !== null, fn ($q) => $q->whereIn('shift_id', $shiftIds))->get();
 
         $teachers = Teacher::with(['attendances' => function ($q) use ($date) {
             $q->where('date', $date);
@@ -99,22 +101,28 @@ class AttendanceController extends Controller
         }
 
         if ($request->shift_id && $request->date) {
-            $students = Student::with(['attendances' => function ($q) use ($request) {
-                $q->where('date', $request->date);
-            }])->where('shift_id', $request->shift_id)->get();
+            $students = Student::with([
+                'attendances' => fn ($q) => $q->where('date', $request->date),
+                'absences' => fn ($q) => $q->where('date', $request->date),
+            ])->where('shift_id', $request->shift_id)->get();
 
             // أساتذة نفس الفترة وحضورهم بنفس التاريخ
             $teachers = Teacher::with(['attendances' => function ($q) use ($request) {
                 $q->where('date', $request->date);
             }])->where('shift_id', $request->shift_id)->get();
 
-            // فلترة الطلاب حسب الحضور/الغياب
+            // فلترة الطلاب حسب الحالة
             $status = $request->input('status');
-            if ($status === 'present') {
-                $students = $students->filter(fn ($s) => $s->attendances->isNotEmpty())->values();
-            } elseif ($status === 'absent') {
-                $students = $students->filter(fn ($s) => $s->attendances->isEmpty())->values();
-            }
+            $students = match ($status) {
+                'present' => $students->filter(fn ($s) => $s->attendances->isNotEmpty()),
+                'absent' => $students->filter(fn ($s) => $s->attendances->isEmpty()),
+                'excused' => $students->filter(fn ($s) => $s->attendances->isEmpty()
+                    && optional($s->absences->first())->type === 'excused'),
+                'unexcused' => $students->filter(fn ($s) => $s->attendances->isEmpty()
+                    && optional($s->absences->first())->type === 'unexcused'),
+                default => $students,
+            };
+            $students = $students->values();
         }
 
         return view('attendance.by_shift', compact('shifts', 'students', 'teachers'));

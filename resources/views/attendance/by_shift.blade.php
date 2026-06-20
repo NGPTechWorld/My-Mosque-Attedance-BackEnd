@@ -20,6 +20,8 @@
                     <option value="" {{ request('status') === '' || request('status') === null ? 'selected' : '' }}>الكل</option>
                     <option value="present" {{ request('status') === 'present' ? 'selected' : '' }}>الحاضرون فقط</option>
                     <option value="absent" {{ request('status') === 'absent' ? 'selected' : '' }}>الغائبون فقط</option>
+                    <option value="excused" {{ request('status') === 'excused' ? 'selected' : '' }}>غياب مبرّر</option>
+                    <option value="unexcused" {{ request('status') === 'unexcused' ? 'selected' : '' }}>غياب غير مبرّر</option>
                 </select>
             </div>
             <div class="col">
@@ -47,9 +49,13 @@
                         <td>{{ $s->name }}</td>
                         <td>
                             @if($s->attendances->isNotEmpty())
-                                ✅ {{ \Carbon\Carbon::parse($s->attendances[0]->check_in_time)->format('h:i A') }}
+                                <span class="badge bg-success">حاضر {{ \Carbon\Carbon::parse($s->attendances[0]->check_in_time)->format('h:i A') }}</span>
+                            @elseif($s->absences->isNotEmpty() && $s->absences[0]->type === 'excused')
+                                <span class="badge bg-warning text-dark">غائب مبرّر</span>
+                            @elseif($s->absences->isNotEmpty())
+                                <span class="badge bg-danger">غائب غير مبرّر</span>
                             @else
-                                ❌ غائب
+                                <span class="badge bg-secondary">غائب</span>
                             @endif
                         </td>
                     </tr>

@@ -16,9 +16,13 @@
                 <td>{{ $student->name }}</td>
                 <td>
                     @if($student->attendances->isNotEmpty())
-                        ✅ {{ \Carbon\Carbon::parse($student->attendances[0]->check_in_time)->format('h:i A') }}
+                        <span class="badge bg-success">حاضر {{ \Carbon\Carbon::parse($student->attendances[0]->check_in_time)->format('h:i A') }}</span>
+                    @elseif($student->absences->isNotEmpty() && $student->absences[0]->type === 'excused')
+                        <span class="badge bg-warning text-dark">غائب مبرّر</span>
+                    @elseif($student->absences->isNotEmpty())
+                        <span class="badge bg-danger">غائب غير مبرّر</span>
                     @else
-                        ❌ غائب
+                        <span class="badge bg-secondary">غائب</span>
                     @endif
                 </td>
             </tr>
