@@ -12,6 +12,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\SupervisorController;
 use App\Http\Controllers\AbsenceController;
+use App\Http\Controllers\PointReasonController;
 
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -58,6 +59,14 @@ Route::get('/teachers/{id}/edit', [TeacherController::class, 'edit'])->name('tea
 Route::put('/teachers/{id}', [TeacherController::class, 'update'])->name('teachers.update');
 Route::delete('/teachers/{id}', [TeacherController::class, 'destroy'])->name('teachers.destroy');
 Route::post('/teachers/{id}/checkin', [TeacherController::class, 'checkInWeb'])->name('teachers.checkin');
+
+// برنامج النقاط (أسباب إضافة/حذف النقاط)
+Route::get('/point-reasons', [PointReasonController::class, 'index'])->name('point_reasons.index');
+Route::get('/point-reasons/create', [PointReasonController::class, 'create'])->name('point_reasons.create');
+Route::post('/point-reasons', [PointReasonController::class, 'store'])->name('point_reasons.store');
+Route::get('/point-reasons/{id}/edit', [PointReasonController::class, 'edit'])->name('point_reasons.edit');
+Route::put('/point-reasons/{id}', [PointReasonController::class, 'update'])->name('point_reasons.update');
+Route::delete('/point-reasons/{id}', [PointReasonController::class, 'destroy'])->name('point_reasons.destroy');
 
 // متابعة النظام (تفاعل تطبيق الأهل)
 Route::get('/monitoring', [MonitoringController::class, 'index'])->name('monitoring.index');

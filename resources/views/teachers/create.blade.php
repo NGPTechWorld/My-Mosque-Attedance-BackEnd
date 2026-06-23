@@ -29,13 +29,13 @@
         <input name="subject" class="form-control" value="{{ old('subject') }}">
     </div>
     <div class="mb-3">
-        <label>الفترة:</label>
-        <select name="shift_id" class="form-select">
-            <option value="">-- بدون فترة --</option>
+        <label>الفترات (يمكن اختيار أكثر من فترة — فترة واحدة على الأقل):</label>
+        <select name="shift_ids[]" class="form-select" multiple size="5" required>
             @foreach($shifts as $shift)
-                <option value="{{ $shift->id }}" {{ old('shift_id') == $shift->id ? 'selected' : '' }}>{{ $shift->name }}</option>
+                <option value="{{ $shift->id }}" {{ collect(old('shift_ids', []))->contains($shift->id) ? 'selected' : '' }}>{{ $shift->name }}</option>
             @endforeach
         </select>
+        <small class="text-muted">اضغط Ctrl (أو Cmd) لاختيار أكثر من فترة.</small>
     </div>
     <button class="btn btn-primary">حفظ</button>
     <a href="{{ route('teachers.index') }}" class="btn btn-secondary">رجوع</a>

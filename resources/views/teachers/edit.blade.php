@@ -30,13 +30,14 @@
         <input name="subject" class="form-control" value="{{ old('subject', $teacher->subject) }}">
     </div>
     <div class="mb-3">
-        <label>الفترة:</label>
-        <select name="shift_id" class="form-select">
-            <option value="">-- بدون فترة --</option>
+        <label>الفترات (يمكن اختيار أكثر من فترة — فترة واحدة على الأقل):</label>
+        @php $selectedShifts = old('shift_ids', $teacher->shifts->pluck('id')->all()); @endphp
+        <select name="shift_ids[]" class="form-select" multiple size="5" required>
             @foreach($shifts as $shift)
-                <option value="{{ $shift->id }}" {{ old('shift_id', $teacher->shift_id) == $shift->id ? 'selected' : '' }}>{{ $shift->name }}</option>
+                <option value="{{ $shift->id }}" {{ collect($selectedShifts)->contains($shift->id) ? 'selected' : '' }}>{{ $shift->name }}</option>
             @endforeach
         </select>
+        <small class="text-muted">اضغط Ctrl (أو Cmd) لاختيار أكثر من فترة.</small>
     </div>
     <button class="btn btn-primary">حفظ التعديلات</button>
     <a href="{{ route('teachers.index') }}" class="btn btn-secondary">رجوع</a>

@@ -26,7 +26,7 @@
                         <a class="nav-link" href="{{ route('dashboard') }}">الرئيسية</a>
                     </li>
 
-                    @if ($u && ($u->hasSection('students') || $u->hasSection('points') || $u->hasSection('shifts')))
+                    @if ($u && ($u->hasSection('students') || $u->hasSection('points') || $u->hasSection('point_program') || $u->hasSection('shifts')))
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
                                 aria-expanded="false">
@@ -38,6 +38,9 @@
                                 @endif
                                 @if ($u->hasSection('points'))
                                     <li><a class="dropdown-item" href="{{ route('points.index') }}">النقاط</a></li>
+                                @endif
+                                @if ($u->hasSection('point_program'))
+                                    <li><a class="dropdown-item" href="{{ route('point_reasons.index') }}">برنامج النقاط</a></li>
                                 @endif
                                 @if ($u->hasSection('shifts'))
                                     <li><a class="dropdown-item" href="{{ route('shifts.index') }}">الفترات</a></li>

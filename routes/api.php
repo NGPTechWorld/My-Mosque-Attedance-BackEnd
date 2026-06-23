@@ -7,6 +7,7 @@ use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\ParentController;
 use App\Http\Controllers\TeacherController;
+use App\Http\Controllers\TeacherPointController;
 
 // الطلاب
 Route::get('/students', [StudentController::class, 'index']);
@@ -29,6 +30,11 @@ Route::get('/attendance', [AttendanceController::class, 'index']);
 // الأساتذة
 Route::get('/teachers', [TeacherController::class, 'index_api']);
 Route::post('/teachers/check-in', [TeacherController::class, 'checkInApi']);
+
+// تطبيق الأساتذة (برنامج النقاط)
+Route::post('/teacher/login', [TeacherPointController::class, 'login']);          // دخول الأستاذ
+Route::get('/point-reasons', [TeacherPointController::class, 'reasons']);          // أسباب النقاط المفعّلة
+Route::post('/teacher/points', [TeacherPointController::class, 'applyPoints']);    // إضافة/حذف نقاط بعد مسح الباركود
 
 // تطبيق الأهل
 Route::prefix('parent')->group(function () {

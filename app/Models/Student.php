@@ -48,17 +48,21 @@ class Student extends Model
      *
      * @param  int  $amount  موجب للإضافة، سالب للحذف
      * @param  string|null  $reason  السبب (يظهر في محفظة الأهل)
+     * @param  array  $meta  بيانات تدقيق اختيارية: teacher_id, point_reason_id, note
      */
-    public function addPoints(int $amount, ?string $reason = null): PointTransaction
+    public function addPoints(int $amount, ?string $reason = null, array $meta = []): PointTransaction
     {
         $this->points += $amount;
         $this->save();
 
         return PointTransaction::create([
             'student_id' => $this->id,
+            'teacher_id' => $meta['teacher_id'] ?? null,
+            'point_reason_id' => $meta['point_reason_id'] ?? null,
             'type' => $amount >= 0 ? 'add' : 'remove',
             'amount' => abs($amount),
             'reason' => $reason,
+            'note' => $meta['note'] ?? null,
             'balance_after' => $this->points,
         ]);
     }

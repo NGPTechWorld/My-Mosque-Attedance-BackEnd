@@ -30,7 +30,13 @@
                     <td>{{ $teacher->name }}</td>
                     <td>{{ $teacher->phone }}</td>
                     <td>{{ $teacher->subject }}</td>
-                    <td>{{ $teacher->shift->name ?? '—' }}</td>
+                    <td>
+                        @forelse ($teacher->shifts as $shift)
+                            <span class="badge bg-primary">{{ $shift->name }}</span>
+                        @empty
+                            —
+                        @endforelse
+                    </td>
                     <td class="text-center">
                         @if ($teacher->attendances->isNotEmpty())
                             <span class="badge bg-success">

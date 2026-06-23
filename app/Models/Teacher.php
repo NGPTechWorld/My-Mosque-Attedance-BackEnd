@@ -19,9 +19,25 @@ class Teacher extends Model
         return $this->hasMany(TeacherAttendance::class);
     }
 
+    // الفترة الأساسية (للتوافق مع الكود القديم)
     public function shift()
     {
         return $this->belongsTo(Shift::class);
+    }
+
+    // فترات الأستاذ (متعددة) — أستاذ يمكن أن يدرّس في أكثر من فترة
+    public function shifts()
+    {
+        return $this->belongsToMany(Shift::class, 'shift_teacher')->withTimestamps();
+    }
+
+    /** هل ينتمي الأستاذ لهذه الفترة؟ */
+    public function teachesShift($shiftId): bool
+    {
+        if ($shiftId === null) {
+            return false;
+        }
+        return $this->shifts->contains('id', $shiftId);
     }
 
     /**

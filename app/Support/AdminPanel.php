@@ -15,6 +15,7 @@ class AdminPanel
         'students_delete' => 'حذف الطلاب',
         'absences' => 'تسجيل الغياب',
         'points' => 'النقاط',
+        'point_program' => 'برنامج النقاط',
         'shifts' => 'الفترات',
         'teachers' => 'الأساتذة',
         'reports' => 'تقارير الدوام',
@@ -46,6 +47,13 @@ class AdminPanel
         // النقاط
         'points.index' => 'points',
         'students.updatePoints' => 'points',
+        // برنامج النقاط (أسباب النقاط)
+        'point_reasons.index' => 'point_program',
+        'point_reasons.create' => 'point_program',
+        'point_reasons.store' => 'point_program',
+        'point_reasons.edit' => 'point_program',
+        'point_reasons.update' => 'point_program',
+        'point_reasons.destroy' => 'point_program',
         // الفترات
         'shifts.index' => 'shifts',
         'shifts.store' => 'shifts',

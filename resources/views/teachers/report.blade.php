@@ -39,12 +39,18 @@
                             <small class="text-muted d-block">{{ $teacher->subject }}</small>
                         @endif
                     </td>
-                    <td>{{ $teacher->shift->name ?? '—' }}</td>
+                    <td>
+                        @forelse ($teacher->shifts as $shift)
+                            <span class="badge bg-primary">{{ $shift->name }}</span>
+                        @empty
+                            —
+                        @endforelse
+                    </td>
                     <td class="text-center">{{ $row['expected'] }}</td>
                     <td class="text-center"><span class="badge bg-success">{{ $row['present'] }}</span></td>
                     <td class="text-center"><span class="badge bg-danger">{{ $row['absent'] }}</span></td>
                     <td>
-                        @if (! $teacher->shift)
+                        @if ($teacher->shifts->isEmpty())
                             <span class="text-muted">لا توجد فترة محدّدة لهذا الأستاذ</span>
                         @elseif (empty($row['details']))
                             <span class="text-muted">لا أيام دوام ضمن المدة</span>

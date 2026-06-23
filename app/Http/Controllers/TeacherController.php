@@ -15,7 +15,7 @@ class TeacherController extends Controller
     public function index()
     {
         $today = now()->toDateString();
-        $teachers = Teacher::with(['shift', 'attendances' => function ($q) use ($today) {
+        $teachers = Teacher::with(['shifts', 'attendances' => function ($q) use ($today) {
             $q->where('date', $today);
         }])->get();
 
@@ -38,10 +38,16 @@ class TeacherController extends Controller
             'name' => 'required|string',
             'phone' => 'nullable|string',
             'subject' => 'nullable|string',
-            'shift_id' => 'nullable|exists:shifts,id',
+            'shift_ids' => 'required|array|min:1',
+            'shift_ids.*' => 'exists:shifts,id',
         ]);
 
-        $teacher = Teacher::create($request->only(['code', 'name', 'phone', 'subject', 'shift_id']));
+        $teacher = Teacher::create([
+            ...$request->only(['code', 'name', 'phone', 'subject']),
+            'shift_id' => $request->shift_ids[0], // الفترة الأساسية (للتوافق)
+        ]);
+
+        $teacher->shifts()->sync($request->shift_ids);
 
         // إن لم يُدخل كوداً، ولّد كوداً يبدأ بـ T تلقائياً
         if (empty($teacher->code)) {
@@ -67,11 +73,17 @@ class TeacherController extends Controller
             'name' => 'required|string',
             'phone' => 'nullable|string',
             'subject' => 'nullable|string',
-            'shift_id' => 'nullable|exists:shifts,id',
+            'shift_ids' => 'required|array|min:1',
+            'shift_ids.*' => 'exists:shifts,id',
         ]);
 
         $teacher = Teacher::findOrFail($id);
-        $teacher->update($request->only(['code', 'name', 'phone', 'subject', 'shift_id']));
+        $teacher->update([
+            ...$request->only(['code', 'name', 'phone', 'subject']),
+            'shift_id' => $request->shift_ids[0], // الفترة الأساسية (للتوافق)
+        ]);
+
+        $teacher->shifts()->sync($request->shift_ids);
 
         if (empty($teacher->code)) {
             $teacher->update(['code' => 'T' . $teacher->id]);
@@ -139,7 +151,7 @@ class TeacherController extends Controller
         $from = $request->input('from', now()->startOfMonth()->toDateString());
         $to = $request->input('to', now()->toDateString());
 
-        $teachers = Teacher::with(['shift', 'attendances' => function ($q) use ($from, $to) {
+        $teachers = Teacher::with(['shifts', 'attendances' => function ($q) use ($from, $to) {
             $q->whereBetween('date', [$from, $to])->orderBy('date');
         }])->get();
 
@@ -147,7 +159,8 @@ class TeacherController extends Controller
         $end = Carbon::parse($to);
 
         $rows = $teachers->map(function ($teacher) use ($start, $end) {
-            $days = $teacher->shift->days ?? [];               // أيام دوام الفترة (0=الأحد..6=السبت)
+            // اتحاد أيام كل فترات الأستاذ (0=الأحد..6=السبت)
+            $days = $teacher->shifts->flatMap(fn ($s) => $s->days ?? [])->unique()->values()->all();
             $attended = $teacher->attendances->keyBy('date');  // date => attendance
 
             $present = 0;
