@@ -13,6 +13,7 @@ use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\SupervisorController;
 use App\Http\Controllers\AbsenceController;
 use App\Http\Controllers\PointReasonController;
+use App\Http\Controllers\PointTransactionController;
 
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -67,6 +68,9 @@ Route::post('/point-reasons', [PointReasonController::class, 'store'])->name('po
 Route::get('/point-reasons/{id}/edit', [PointReasonController::class, 'edit'])->name('point_reasons.edit');
 Route::put('/point-reasons/{id}', [PointReasonController::class, 'update'])->name('point_reasons.update');
 Route::delete('/point-reasons/{id}', [PointReasonController::class, 'destroy'])->name('point_reasons.destroy');
+
+// سجل تحويلات النقاط (عرض)
+Route::get('/point-transactions', [PointTransactionController::class, 'index'])->name('point_transactions.index');
 
 // متابعة النظام (تفاعل تطبيق الأهل)
 Route::get('/monitoring', [MonitoringController::class, 'index'])->name('monitoring.index');

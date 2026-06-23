@@ -78,11 +78,15 @@ class TeacherPointController extends Controller
         }
 
         $signed = $reason->signedAmount();
+        $note = $request->note ?: null;
 
-        $transaction = $student->addPoints($signed, $reason->name, [
+        // نلحق ملاحظة الأستاذ بنص السبب حتى تظهر مباشرة في محفظة الأهل
+        $reasonText = $note ? ($reason->name . ' - ' . $note) : $reason->name;
+
+        $transaction = $student->addPoints($signed, $reasonText, [
             'teacher_id' => $teacher->id,
             'point_reason_id' => $reason->id,
-            'note' => $request->note ?: null,
+            'note' => $note,
         ]);
 
         return response()->json([

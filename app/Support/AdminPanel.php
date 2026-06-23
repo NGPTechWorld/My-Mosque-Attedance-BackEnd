@@ -54,6 +54,7 @@ class AdminPanel
         'point_reasons.edit' => 'point_program',
         'point_reasons.update' => 'point_program',
         'point_reasons.destroy' => 'point_program',
+        'point_transactions.index' => 'point_program',
         // الفترات
         'shifts.index' => 'shifts',
         'shifts.store' => 'shifts',

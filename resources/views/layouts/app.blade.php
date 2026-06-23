@@ -41,6 +41,7 @@
                                 @endif
                                 @if ($u->hasSection('point_program'))
                                     <li><a class="dropdown-item" href="{{ route('point_reasons.index') }}">برنامج النقاط</a></li>
+                                    <li><a class="dropdown-item" href="{{ route('point_transactions.index') }}">سجل تحويلات النقاط</a></li>
                                 @endif
                                 @if ($u->hasSection('shifts'))
                                     <li><a class="dropdown-item" href="{{ route('shifts.index') }}">الفترات</a></li>
