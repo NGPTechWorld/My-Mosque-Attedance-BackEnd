@@ -54,6 +54,7 @@ class TeacherPointController extends Controller
             'teacher_id' => 'required',
             'student_code' => 'required',
             'point_reason_id' => 'required',
+            'quantity' => 'nullable|integer|min:1',
             'note' => 'nullable|string|max:255',
         ]);
 
@@ -77,7 +78,8 @@ class TeacherPointController extends Controller
             return response()->json(['message' => 'السبب غير متاح. أعد تحميل القائمة.'], 404);
         }
 
-        $signed = $reason->signedAmount();
+        $quantity = max(1, (int) ($request->quantity ?? 1));
+        $signed = $reason->signedAmount() * $quantity;   // الإجمالي = قيمة السبب × الكمية
         $note = $request->note ?: null;
 
         // نلحق ملاحظة الأستاذ بنص السبب حتى تظهر مباشرة في محفظة الأهل
@@ -86,6 +88,7 @@ class TeacherPointController extends Controller
         $transaction = $student->addPoints($signed, $reasonText, [
             'teacher_id' => $teacher->id,
             'point_reason_id' => $reason->id,
+            'quantity' => $quantity,
             'note' => $note,
         ]);
 
@@ -93,6 +96,7 @@ class TeacherPointController extends Controller
             'message' => 'تمت العملية بنجاح.',
             'student_name' => $student->name,
             'reason_name' => $reason->name,
+            'quantity' => $quantity,
             'applied' => $signed,
             'new_balance' => $student->points,
             'transaction_id' => $transaction->id,

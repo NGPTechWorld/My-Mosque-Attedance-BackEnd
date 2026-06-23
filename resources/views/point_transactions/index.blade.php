@@ -32,6 +32,7 @@
             <th>الطالب</th>
             <th>النوع</th>
             <th>الكمية</th>
+            <th>الإجمالي</th>
             <th>السبب</th>
             <th>ملاحظة الأستاذ</th>
             <th>الأستاذ</th>
@@ -50,6 +51,7 @@
                     <span class="badge bg-danger">حذف</span>
                 @endif
             </td>
+            <td class="text-center">×{{ $tx->quantity ?? 1 }}</td>
             <td class="text-center">{{ $tx->type === 'add' ? '+' : '-' }}{{ $tx->amount }}</td>
             <td>{{ $tx->pointReason->name ?? $tx->reason ?? '—' }}</td>
             <td>{{ $tx->note ?? '—' }}</td>
@@ -57,7 +59,7 @@
             <td class="text-center">{{ $tx->balance_after }}</td>
         </tr>
         @empty
-        <tr><td colspan="8" class="text-center text-muted">لا توجد عمليات.</td></tr>
+        <tr><td colspan="9" class="text-center text-muted">لا توجد عمليات.</td></tr>
         @endforelse
     </tbody>
 </table>

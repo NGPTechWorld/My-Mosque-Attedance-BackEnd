@@ -11,7 +11,8 @@ class PointTransaction extends Model
         'teacher_id',       // الأستاذ الذي طبّق العملية (اختياري)
         'point_reason_id',  // السبب الجاهز من برنامج النقاط (اختياري)
         'type',             // add | remove
-        'amount',           // الكمية (موجبة)
+        'amount',           // الإجمالي (موجب) = قيمة السبب × الكمية
+        'quantity',         // عدد الوحدات (مثلاً عدد الصفحات)
         'reason',           // السبب (نص)
         'note',             // ملاحظة الأستاذ (اختيارية)
         'balance_after',
