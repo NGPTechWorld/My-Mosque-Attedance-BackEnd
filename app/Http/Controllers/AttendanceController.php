@@ -210,19 +210,18 @@ class AttendanceController extends Controller
             $shift = $student->shift;
 
             $today = $request->date ? Carbon::parse($request->date) : Carbon::now();
-            $dayIndex = $today->dayOfWeek;
-
-            if (!in_array($dayIndex, $shift->days)) {
-                return response()->json(['message' => 'اليوم ليس من أيام دوام الطالب.'], 400);
-            }
-
-            // التحقق من الوقت ضمن الفترة الزمنية للدوام
             $currentTime = $today->format('H:i:s');
-            $startTime = $shift->start_time; // مثال: "08:00:00"
-            $endTime = $shift->end_time;     // مثال: "14:00:00"
 
-            if ($currentTime < $startTime || $currentTime > $endTime) {
-                return response()->json(['message' => 'غير مسموح بتسجيل الحضور خارج فترة الدوام.'], 400);
+            // يوم الجمعة: الحضور مسموح لطلاب كل الفترات بدون التقيّد بأيام/أوقات الفترة
+            if (! $today->isFriday()) {
+                if (!in_array($today->dayOfWeek, $shift->days)) {
+                    return response()->json(['message' => 'اليوم ليس من أيام دوام الطالب.'], 400);
+                }
+
+                // التحقق من الوقت ضمن الفترة الزمنية للدوام
+                if ($currentTime < $shift->start_time || $currentTime > $shift->end_time) {
+                    return response()->json(['message' => 'غير مسموح بتسجيل الحضور خارج فترة الدوام.'], 400);
+                }
             }
 
             $alreadyChecked = Attendance::where('student_id', $student->id)

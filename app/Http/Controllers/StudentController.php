@@ -208,9 +208,9 @@ class StudentController extends Controller
     {
         $student = Student::with('shift')->findOrFail($id);
         $today = now();
-        $dayIndex = $today->dayOfWeek;
 
-        if (!in_array($dayIndex, $student->shift->days ?? [])) {
+        // يوم الجمعة: الحضور مسموح لكل الطلاب بغضّ النظر عن أيام فترتهم
+        if (! $today->isFriday() && !in_array($today->dayOfWeek, $student->shift->days ?? [])) {
             return back()->with('error', 'اليوم ليس من أيام دوام الطالب');
         }
 

@@ -33,9 +33,15 @@ class SettingsController extends Controller
             'message' => Setting::get(R::KEY_ABSENCE_MESSAGE, 'خصم غياب'),
         ];
 
+        $friday = [
+            'enabled' => Setting::get(R::KEY_FRIDAY_ENABLED, '0') === '1',
+            'points' => (int) Setting::get(R::KEY_FRIDAY_POINTS, 0),
+            'message' => Setting::get(R::KEY_FRIDAY_MESSAGE, 'نقاط حضور الجمعة'),
+        ];
+
         $shifts = Shift::all();
 
-        return view('settings.attendance_reward', compact('reward', 'late', 'absence', 'shifts'));
+        return view('settings.attendance_reward', compact('reward', 'late', 'absence', 'friday', 'shifts'));
     }
 
     public function updateAttendanceReward(Request $request)
@@ -47,6 +53,8 @@ class SettingsController extends Controller
             'late_message' => 'nullable|string|max:255',
             'absence_points' => 'required|integer|min:0|max:100000',
             'absence_message' => 'nullable|string|max:255',
+            'friday_points' => 'required|integer|min:0|max:100000',
+            'friday_message' => 'nullable|string|max:255',
             'late_times' => 'nullable|array',
             'late_times.*' => 'nullable|date_format:H:i',
         ]);
@@ -63,6 +71,10 @@ class SettingsController extends Controller
             R::KEY_ABSENCE_ENABLED => $request->boolean('absence_enabled') ? '1' : '0',
             R::KEY_ABSENCE_POINTS => (string) $request->input('absence_points'),
             R::KEY_ABSENCE_MESSAGE => $request->input('absence_message'),
+
+            R::KEY_FRIDAY_ENABLED => $request->boolean('friday_enabled') ? '1' : '0',
+            R::KEY_FRIDAY_POINTS => (string) $request->input('friday_points'),
+            R::KEY_FRIDAY_MESSAGE => $request->input('friday_message'),
         ]);
 
         // وقت التأخير لكل فترة

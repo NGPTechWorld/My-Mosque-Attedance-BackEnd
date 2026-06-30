@@ -30,12 +30,28 @@ class AttendanceRewardService
     public const KEY_ABSENCE_POINTS = 'absence_penalty_points';
     public const KEY_ABSENCE_MESSAGE = 'absence_penalty_message';
 
+    // حضور يوم الجمعة (نقاط خاصة بدون احتساب تأخير)
+    public const KEY_FRIDAY_ENABLED = 'friday_reward_enabled';
+    public const KEY_FRIDAY_POINTS = 'friday_reward_points';
+    public const KEY_FRIDAY_MESSAGE = 'friday_reward_message';
+
     /**
      * يُطبَّق عند تسجيل حضور الطالب: خصم تأخير إن تأخّر، وإلا منح نقاط الحضور.
      */
     public function applyCheckIn(Student $student, Carbon $time): void
     {
         try {
+            // يوم الجمعة: نقاط حضور خاصة، بدون احتساب تأخير
+            if ($time->isFriday()) {
+                if (Setting::get(self::KEY_FRIDAY_ENABLED, '0') === '1') {
+                    $points = (int) Setting::get(self::KEY_FRIDAY_POINTS, 0);
+                    if ($points > 0) {
+                        $student->addPoints($points, $this->messageOr(self::KEY_FRIDAY_MESSAGE, 'نقاط حضور الجمعة'));
+                    }
+                }
+                return;
+            }
+
             if ($this->isLate($student, $time) && Setting::get(self::KEY_LATE_ENABLED, '0') === '1') {
                 $this->deduct($student, self::KEY_LATE_POINTS, self::KEY_LATE_MESSAGE, 'خصم تأخير');
                 return;

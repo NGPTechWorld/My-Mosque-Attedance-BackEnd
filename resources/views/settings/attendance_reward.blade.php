@@ -94,6 +94,31 @@
             </div>
         </div>
 
+        {{-- نقاط حضور الجمعة --}}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white fw-bold">نقاط حضور الجمعة (إضافة)</div>
+            <div class="card-body">
+                <p class="text-muted small">يوم الجمعة يُسمح بتسجيل حضور طلاب كل الفترات (بدون التقيّد بأيام/أوقات الفترة)، وتُمنح هذه النقاط بدل نقاط الحضور العادية ودون احتساب تأخير.</p>
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" role="switch" id="friday_enabled"
+                        name="friday_enabled" value="1" @checked($friday['enabled'])>
+                    <label class="form-check-label fw-bold" for="friday_enabled">تفعيل منح نقاط عند حضور يوم الجمعة</label>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">عدد النقاط المضافة</label>
+                        <input type="number" class="form-control" name="friday_points" min="0" max="100000"
+                            value="{{ old('friday_points', $friday['points']) }}" placeholder="مثلاً: 150" required>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label">رسالة سجل النقاط</label>
+                        <input type="text" class="form-control" name="friday_message" maxlength="255"
+                            value="{{ old('friday_message', $friday['message']) }}" placeholder="مثلاً: نقاط حضور الجمعة">
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {{-- وقت التأخير لكل فترة --}}
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-secondary text-white fw-bold">وقت التأخير حسب الفترة</div>
