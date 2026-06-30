@@ -12,6 +12,7 @@
             <th>السبب</th>
             <th>النوع</th>
             <th>الكمية</th>
+            <th>الفترات</th>
             <th>الحالة</th>
             <th>إجراءات</th>
         </tr>
@@ -29,6 +30,13 @@
             </td>
             <td>{{ $reason->amount }}</td>
             <td>
+                @forelse ($reason->shifts as $shift)
+                    <span class="badge bg-info text-dark">{{ $shift->name }}</span>
+                @empty
+                    <span class="text-muted">—</span>
+                @endforelse
+            </td>
+            <td>
                 @if ($reason->active)
                     <span class="badge bg-primary">مفعّل</span>
                 @else
@@ -45,7 +53,7 @@
             </td>
         </tr>
         @empty
-        <tr><td colspan="5" class="text-center text-muted">لا توجد أسباب بعد. أضف أول سبب.</td></tr>
+        <tr><td colspan="6" class="text-center text-muted">لا توجد أسباب بعد. أضف أول سبب.</td></tr>
         @endforelse
     </tbody>
 </table>

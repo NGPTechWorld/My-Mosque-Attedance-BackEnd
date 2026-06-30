@@ -73,9 +73,14 @@ class TeacherPointController extends Controller
             return response()->json(['message' => 'الطالب ليس من فترتك.'], 422);
         }
 
-        $reason = PointReason::active()->find($request->point_reason_id);
+        $reason = PointReason::active()->with('shifts')->find($request->point_reason_id);
         if (! $reason) {
             return response()->json(['message' => 'السبب غير متاح. أعد تحميل القائمة.'], 404);
+        }
+
+        // التحقق: السبب يجب أن يكون مرتبطاً بفترة الطالب
+        if (! $reason->availableForShift($student->shift_id)) {
+            return response()->json(['message' => 'هذا السبب غير متاح لفترة الطالب.'], 422);
         }
 
         $quantity = max(1, (int) ($request->quantity ?? 1));

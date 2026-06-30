@@ -34,6 +34,17 @@
         value="{{ old('amount', $reason->amount ?? '') }}" required>
 </div>
 
+<div class="mb-3">
+    <label class="form-label">الفترات (يمكن اختيار أكثر من فترة — فترة واحدة على الأقل):</label>
+    @php $selectedShifts = old('shift_ids', isset($reason) ? $reason->shifts->pluck('id')->all() : []); @endphp
+    <select name="shift_ids[]" class="form-select" multiple size="5" required>
+        @foreach ($shifts as $shift)
+            <option value="{{ $shift->id }}" {{ collect($selectedShifts)->contains($shift->id) ? 'selected' : '' }}>{{ $shift->name }}</option>
+        @endforeach
+    </select>
+    <small class="text-muted">اضغط Ctrl (أو Cmd) لاختيار أكثر من فترة. السبب يظهر فقط لطلاب هذه الفترات.</small>
+</div>
+
 <div class="form-check mb-4">
     <input type="hidden" name="active" value="0">
     <input class="form-check-input" type="checkbox" name="active" value="1" id="active"
