@@ -14,6 +14,7 @@ use App\Http\Controllers\SupervisorController;
 use App\Http\Controllers\AbsenceController;
 use App\Http\Controllers\PointReasonController;
 use App\Http\Controllers\PointTransactionController;
+use App\Http\Controllers\AttendanceEventController;
 
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -71,6 +72,15 @@ Route::delete('/point-reasons/{id}', [PointReasonController::class, 'destroy'])-
 
 // سجل تحويلات النقاط (عرض)
 Route::get('/point-transactions', [PointTransactionController::class, 'index'])->name('point_transactions.index');
+
+// مناسبات الحضور الخاصة
+Route::get('/attendance-events', [AttendanceEventController::class, 'index'])->name('attendance_events.index');
+Route::get('/attendance-events/create', [AttendanceEventController::class, 'create'])->name('attendance_events.create');
+Route::get('/attendance-events/report', [AttendanceEventController::class, 'report'])->name('attendance_events.report');
+Route::post('/attendance-events', [AttendanceEventController::class, 'store'])->name('attendance_events.store');
+Route::get('/attendance-events/{id}/edit', [AttendanceEventController::class, 'edit'])->name('attendance_events.edit');
+Route::put('/attendance-events/{id}', [AttendanceEventController::class, 'update'])->name('attendance_events.update');
+Route::delete('/attendance-events/{id}', [AttendanceEventController::class, 'destroy'])->name('attendance_events.destroy');
 
 // متابعة النظام (تفاعل تطبيق الأهل)
 Route::get('/monitoring', [MonitoringController::class, 'index'])->name('monitoring.index');

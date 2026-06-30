@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Student;
 use App\Models\Attendance;
+use App\Models\AttendanceEvent;
+use App\Models\EventAttendance;
 use App\Models\Teacher;
 use App\Models\TeacherAttendance;
 use App\Services\AttendanceNotifier;
@@ -212,6 +214,12 @@ class AttendanceController extends Controller
             $today = $request->date ? Carbon::parse($request->date) : Carbon::now();
             $currentTime = $today->format('H:i:s');
 
+            // مناسبة حضور خاصة (لها الأولوية): إن وُجدت مناسبة فعّالة الآن لفترة الطالب
+            $eventResult = $this->tryEventCheckIn($student, $today);
+            if ($eventResult !== null) {
+                return $eventResult;
+            }
+
             // يوم الجمعة: الحضور مسموح لطلاب كل الفترات بدون التقيّد بأيام/أوقات الفترة
             if (! $today->isFriday()) {
                 if (!in_array($today->dayOfWeek, $shift->days)) {
@@ -289,6 +297,53 @@ class AttendanceController extends Controller
             'message' => "تم تسجيل حضور الأستاذ {$teacher->name} بنجاح.",
             'type' => 'teacher',
             'teacher' => ['id' => $teacher->id, 'name' => $teacher->name],
+            'attendance' => $attendance,
+            'date' => $today->toDateString(),
+            'time' => $today->format('H:i:s'),
+        ]);
+    }
+
+    /**
+     * يحاول تسجيل حضور مناسبة خاصة إن كانت فعّالة الآن لفترة الطالب.
+     * يرجع استجابة JSON عند التعامل مع المناسبة، أو null ليكمل الحضور العادي.
+     */
+    private function tryEventCheckIn(Student $student, Carbon $today)
+    {
+        $event = AttendanceEvent::where('active', true)->with('shifts')->get()
+            ->first(fn ($e) => $e->matchesNow($today, $student->shift_id));
+
+        if (! $event) {
+            return null;
+        }
+
+        $already = EventAttendance::where('attendance_event_id', $event->id)
+            ->where('student_id', $student->id)
+            ->where('date', $today->toDateString())
+            ->exists();
+
+        if ($already) {
+            return response()->json(['message' => 'تم تسجيل حضورك في هذه المناسبة مسبقاً.'], 400);
+        }
+
+        $attendance = EventAttendance::create([
+            'attendance_event_id' => $event->id,
+            'student_id' => $student->id,
+            'date' => $today->toDateString(),
+            'check_in_time' => $today->format('H:i:s'),
+        ]);
+
+        // منح نقاط المناسبة (السبب = نص الإشعار أو اسم المناسبة)
+        if ($event->points > 0) {
+            $student->addPoints($event->points, $event->message ?: $event->name);
+        }
+
+        // إشعار الأهل
+        $this->notifier->notifyEvent($student, $today, $event);
+
+        return response()->json([
+            'message' => "تم تسجيل حضورك في: {$event->name}",
+            'type' => 'event',
+            'event' => ['id' => $event->id, 'name' => $event->name],
             'attendance' => $attendance,
             'date' => $today->toDateString(),
             'time' => $today->format('H:i:s'),

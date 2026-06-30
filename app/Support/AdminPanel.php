@@ -22,6 +22,7 @@ class AdminPanel
         'monitoring' => 'متابعة النظام',
         'announcements' => 'إرسال إعلان',
         'attendance_points' => 'نقاط الحضور',
+        'attendance_events' => 'مناسبات الحضور',
     ];
 
     /** الأقسام التي تُقيَّد بالفترات المُسندة للمشرف. */
@@ -73,6 +74,14 @@ class AdminPanel
         'attendance.byShift' => 'reports',
         'attendance.monthlyReport' => 'reports',
         'attendance.friday' => 'reports',
+        'attendance_events.report' => 'reports',
+        // مناسبات الحضور (إدارة)
+        'attendance_events.index' => 'attendance_events',
+        'attendance_events.create' => 'attendance_events',
+        'attendance_events.store' => 'attendance_events',
+        'attendance_events.edit' => 'attendance_events',
+        'attendance_events.update' => 'attendance_events',
+        'attendance_events.destroy' => 'attendance_events',
         // متابعة النظام
         'monitoring.index' => 'monitoring',
         // الإعلانات

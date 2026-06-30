@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\AttendanceEvent;
 use App\Models\ParentNotification;
 use App\Models\Student;
 use Carbon\Carbon;
@@ -65,6 +66,49 @@ class AttendanceNotifier
             $this->fcm->sendToGuardian($student->guardian_phone, $title, $body, $data);
         } catch (\Throwable $e) {
             Log::error('Failed to send FCM attendance notification: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * إشعار حضور مناسبة خاصة: يُحفظ في السجل ويُرسل عبر Firebase.
+     */
+    public function notifyEvent(Student $student, Carbon $time, AttendanceEvent $event): void
+    {
+        $dayName = self::DAYS_AR[$time->dayOfWeek] ?? '';
+
+        $title = $event->name;
+        $body = ($event->message !== null && trim($event->message) !== '')
+            ? $event->message
+            : "تم تسجيل حضور الطالب {$student->name} في {$event->name} يوم {$dayName}";
+
+        $data = [
+            'type' => 'event',
+            'event_id' => $event->id,
+            'event_name' => $event->name,
+            'student_id' => $student->id,
+            'date' => $time->toDateString(),
+            'day' => $dayName,
+        ];
+
+        // 1) حفظ الإشعار في السجل (يظهر داخل التطبيق)
+        try {
+            ParentNotification::create([
+                'student_id' => $student->id,
+                'guardian_phone' => $student->guardian_phone,
+                'type' => 'event',
+                'title' => $title,
+                'body' => $body,
+                'data' => $data,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to store event notification: ' . $e->getMessage());
+        }
+
+        // 2) إرسال إشعار Firebase لأجهزة الأهل
+        try {
+            $this->fcm->sendToGuardian($student->guardian_phone, $title, $body, $data);
+        } catch (\Throwable $e) {
+            Log::error('Failed to send FCM event notification: ' . $e->getMessage());
         }
     }
 

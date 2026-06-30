@@ -80,6 +80,12 @@
                         </li>
                     @endif
 
+                    @if ($u && $u->hasSection('attendance_events'))
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('attendance_events.index') }}">مناسبات الحضور</a>
+                        </li>
+                    @endif
+
                     @if ($u && $u->hasSection('reports'))
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
@@ -90,6 +96,7 @@
                                 <li><a class="dropdown-item" href="{{ route('attendance.byShift') }}">دوام حسب الفترة</a></li>
                                 <li><a class="dropdown-item" href="{{ route('attendance.monthlyReport') }}">تقرير شهري</a></li>
                                 <li><a class="dropdown-item" href="{{ route('attendance.friday') }}">تقرير الجمعة</a></li>
+                                <li><a class="dropdown-item" href="{{ route('attendance_events.report') }}">تقرير المناسبات</a></li>
                             </ul>
                         </li>
                     @endif
